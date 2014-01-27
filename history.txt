@@ -1,0 +1,154 @@
+history.txt
+
+0.35(20140117)
+install.sh
+- yikes, installing rar and unrar from rarlabs caused conflict with ubuntu's
+  choice of rar/unrar. remove /usr/local/bin/rar and /usr/local/bin/unrar to uninstall.
+- The script checks if you've got the ubuntu packages rar or unrar. One of those are
+  good enough for fruitpeeler. If non of those are present, the script will ask the
+  user a y/n question to install the unrar package. The package unrar in the ubuntu
+  repositories is now at 4.00 beta 3 freeware, and that is more than good enough for
+  fruitpeeler. It used to be 3.94, and that caused problems with unicode in filenames
+  and passwords, and that is why we used to install rar from rarlab manually.
+fruitpeeler.pl
+- improved clasification of what rar software is installed on ubuntu. The proble is that
+  the ubuntu packages unrar and unrar-free will have the same command name (unrar), and
+  we do not want the unrar-free because it is ancient. The script now ignores it.
+  The script will choose unrar in home directory over anything else, and if unrar is
+  not present it will look for rar. If no rar program are present, fruitpeeler won't start.
+
+0.34(20140115)
+install.sh:
+- checks for missing packages
+- ubuntu-only: can install missing packages.
+- cygwin-only: notify of missing packages.
+- copy a launch icon to desktop (new on cygwin)
+fruitpeeler:
+- recursive search. look for archives in dirs deeper than one level.
+  this means much fancier directory structures on the destination!
+- Propper (!) ChooseDirectory dialog for selecting source or destination folder.
+  This was requested years ago, but today I got an epiphany!
+  Note: The packages zenity on ubuntu or perl-Win32-GUI on Cygwin are optional, but
+        without them you get the uuglaay ChooseDirectory dialog that comes with
+        the ancient perl-tk. On ubuntu zenity comes with the OS.
+- improved load configuration function when config file (.fruitpeeler) is missing.
+- improved algorithm to determine current OS.
+
+0.32(20120620)
+- Cygwin-only: Support for passwords with " doublequotes in them. This will only
+  work if you compile unrar.exe from rarlab. Added usage of unrar.exe if located in
+  home directory. This allows for making and using of rarlab's unrar.exe using their
+  sourcode and makefile. To make unrar.exe write "make -f unrar.unix".
+  See this website for more info:
+    http://oscarvalles.wordpress.com/2009/08/21/extracting-rar-files-in-cygwin/
+
+0.31(20111008)
+- Support for looong passwords.
+- Accept winrar error message (exit value) 9, to not get stuck when extracting
+  wierd behaviour in filenames from unix platforms.
+
+0.30(20110519)
+- Added Checkbutton option for creating folders in destination based on
+  folders selected for extraction in source. Example: Folder "docs" selected,
+  Extract to Destination selected, create folders in dest selected, and
+  CreateFolders selected, then the archives in "docs" will be extracted to 
+  /{destinationpath}/docs/{rarfilename}/
+- Fixed: Dirs in the listbox who contain archives did get bold font even if the
+  first part of a multi-part archive was missing.
+- Added handling of passwords with $-chars (needed escaping).
+- Cygwin: Added proper handling of unix-paths (/home/user/ etc.) using cygwin's
+  cygpath command. I'm caching the command because its relatively slow.
+
+0.29(20110429)
+- Added Window Adjuster between the filelist and the password list.
+- Added Window Resize. Adjuster is anchored to the password list when resizing.
+- Added font-styles to dirs and files in the listbox.
+- Dirs in the listbox who contain archives are displayed with bold text.
+- Fixed problem with dirnames with dots who doesnt show up in the lister.
+- Changed directory sorting to case-insenstive sorting.
+- Prevent change of path when users tries to empty path select in the
+  drop-down lists.
+- Added handling of utf8 dir- and filenames. 
+
+0.28(20110419)
+- Fixed problem with double quotes in passwords. On Ubuntu, all "
+  in passwords are replaced by \". This works, but on Cygwin it is not
+  that easy if you are using win32 native rar.exe (one is not supposed
+  to mix win32 and cygwin native executables, but we do so anyway).
+  In windows batch files (.bat) the problem is solved by replacing "
+  with "", but this doesn't work with win32 rar.exe under cygwin sh-shell.
+  I have noted before that I want to use the right tool for the job
+  (rar for rar and p7zip for 7z/zip), but in this special case I'm using
+  p7zip for rars if the password has " char. p7zip can handle rar's too
+  and it is compiled for cygwin, and therefor have no compatibility issues.
+
+0.27(20110411)
+- Added directory browsing in the filelist when double-clicking items.
+  I also put a ".." in the filelist to be able to browse backwards.
+  If an dir-entry in the filelist is changed since last refresh_filelist,
+  then the double-clicked of such an item will refresh the filelist.
+- Added 'select all files' event when Control-Key-a pressed.
+- Added images on buttons.
+- Added search for executable /home/user/rar/rar .
+- Fixed bug when searching for exec. (cdp thought dirs where files).
+
+0.26(20110404)
+- Ubuntu-only: Installer and uninstaller improved. Installation of 
+  required packages (perl-tk, rar and p7zip-full) are now conveniently
+  executed in the installation script install.sh.
+  --> Double click install.sh and then click "Run in Terminal".
+- Improved dropdown lists. Devices and volumes are added on the fly.
+  Home path is marked green, and paths added on the fly are marked blue.
+    Ubuntu: homedir, removable devices and truecrypt volumes.
+    Cygwin: All capital letter volumes (/cygpath/c, d, e etc).
+- Added image to Browse buttons.
+
+0.25(20110401)
+- Removed the -ed option in the rar extract command. It was causing some
+  trouble on windows rar.exe (3.93 and 4.00) when trying to extract a 
+  rar file created on ubuntu (unknown software tool used).
+
+0.24(20110330)
+- Fixed problem with deleting multipart files. The glob() function under
+  cygwin(only) needed ' or " when a path had spaces, and required 
+  that there had to be non ' or " when a path have no spaces hmm.
+  Spaces in path given to glob() func are now replaced with escaped spaces,
+  and this solves the problem for both systems.
+- Fixed problem multipart-rar files. The Createfolder function in crackDpck
+  did include the .part01 in its new folder name when extracting multipart-rar.
+- Reverted change from v0.22. Creating dirs with rar didn't work
+  without rightmost slash.
+- cygwin-only: p7zip replaces WinRAR for extracting 7z and zip files.
+  WinRAR.exe do support 7z files, but doesn't support split-7z files.
+  Cygwin users need to install the free p7zip package thru cygwin's setup.exe.
+- Fixed silly hash bang slash header not pointing at Perl.
+
+0.23(20110327)
+- added progress window.
+- matching of files is now case insensitive.
+- added handling of split-archives (*.7z.### and *.part##.rar etc.)
+- fixed problem with deleting files located in paths with spaces. classic.
+
+0.22(20110324)
+- removed rightmost slash in output dir-name argument given to extractors. 
+
+0.21(20110323)
+- scanning actual files only (no symbolic links or devices).
+- handles also 7z/zip files using WinRAR.exe (cygwin) or p7zip (ubuntu).
+
+0.20(20110320)
+- first time working under both cygwin and ubuntu.
+- utf-8 transcoding of passnames when loading and saving cfg. (TK text widget
+  use socalled wide-characters (more than 8bits) and needed to be tamed.
+- Characters like ( ) & in passwords are escaped with a \ to please
+  sh-shell when extracting. Works great.
+- cygwin-only: cyg_path and win_path subrutines used to convert to/from
+  windows-style pathnames at the very last moment befor calling native
+  windows rar.
+
+0.12(20110320)
+- working history of source and destination paths, and check for existence
+  of path when loading config from file.
+- configuration loading and saving works.
+- cygwin-only: default source and destination path is /cygdrive/
+- cygwin-only: improved finding of rar.exe under cygwin.
