@@ -1,5 +1,14 @@
 FruitPeeler v0.34 readme.txt
 
+Fruitpeeler is a archive extracting tool with GUI written in perl-tk.
+FruitPeeler utilizes unrar/7z/zip found on the system.
+The user has the option to add passwords in a text box to easy the
+extraction and decryption process.
+
+What fruitpeeler is not: FruitPeeler is not a cracker/bruteforce tool,
+for that purpose fruitpeeler is too slow anyway.
+
+
 Installation & upgrade
 
   the short version:
@@ -9,7 +18,7 @@ Installation & upgrade
   the long versions:
 
   Ubuntu:
-   - Make sure you have closed down crackDpck before installing.
+   - Make sure you have closed down FruitPeeler before installing.
    - Extract downloaded file fp034.rar to your home directory.
    - open a console and move to the home directory and fruitpeeler
      directory (cd ~/fruitpeeler)
@@ -27,7 +36,7 @@ Installation & upgrade
          ChooseDirectory dialog windows will look uuglaay.
 
   Cygwin:
-    - Make sure you have closed down crackDpck before installing.
+    - Make sure you have closed down FruitPeeler before installing.
     - Extract downloaded file fp034.rar to your home directory.
     - open a console and move to the homedirectory and fruitpeeler
       directory (cd ~/fruitpeeler)
@@ -45,7 +54,7 @@ Installation & upgrade
       a 100% cygwin compatible and updates unrar program that handles passwords
       with doublequotes.
 
-        Make sure xwin is loaded before starting crackDpck on Cygwin.
+        Make sure xwin is loaded before starting FruitPeeler on Cygwin.
 
 Uninstallation:
 
@@ -53,7 +62,7 @@ Uninstallation:
 
    long t-spoon version:
 
-   - Make sure you have closed down crackDpck before installing.
+   - Make sure you have closed down FruitPeeler before installing.
    - Extract downloaded file fp034.rar to your home directory if you have deleted
      the fruitpeeler directory in your home directory.
    - open a console and move to the home directory and fruitpeeler
