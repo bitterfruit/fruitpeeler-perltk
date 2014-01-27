@@ -70,9 +70,9 @@ installonubuntu () {
   }
 
   hash perl >/dev/null 2>&1 || { echo >&2 "PERL must be installed."; installfailed; }
-  #echo "#!"$(command -v perl) >/usr/bin/fruitpeeler || { echo "Try run with sudo?"; installfailed; }
-  cat fruitpeeler.pl >/usr/bin/fruitpeeler || { installfailed; }
-  chmod 715 /usr/bin/fruitpeeler || { installfailed; }
+  echo "Installing fruitpeeler -> /usr/local/bin/fruitpeeler"
+  cat fruitpeeler.pl >/usr/local/bin/fruitpeeler || { installfailed; }
+  chmod 755 /usr/local/bin/fruitpeeler || { installfailed; }
 
   if [ -d /usr/share/pixmaps ] ; then
     cp -v ./ZIP-File-icon_48.png /usr/share/pixmaps || { echo "Unable to copy icon image"; }
@@ -119,10 +119,9 @@ installoncygwin () {
   [[ $failinstall -eq 1 ]] && { echo "Run Setup.exe to install packages.";
     installfailed;
   }
-  echo "Installing fruitpeeler script -> /usr/bin/fruitpeeler"
-  #echo "#!"$(command -v perl) >/usr/bin/fruitpeeler || { installfailed; }
-  cat fruitpeeler.pl >/usr/bin/fruitpeeler || { installfailed; }
-  chmod 715 /usr/bin/fruitpeeler || { installfailed; }
+  echo "Installing fruitpeeler -> /usr/local/bin/fruitpeeler"
+  cat fruitpeeler.pl >/usr/local/bin/fruitpeeler || { installfailed; }
+  chmod 755 /usr/local/bin/fruitpeeler || { installfailed; }
   read -n1 -p"Do you want a launch icon (bat) on your desktop? (y/n) " answer
   echo ""
   [ "$answer" == y ] && {
@@ -155,6 +154,7 @@ fi
 # clean up
 [ -f /usr/bin/crackdpck ] && { rm -v /usr/bin/crackdpck; }
 [ -f /usr/bin/crackDpck.pl ] && { rm -v /usr/bin/crackDpck.pl; }
+[ -f /usr/bin/fruitpeeler ] && { rm -v /usr/bin/fruitpeeler; }
 if [ -f $HOME/.crackDpck ] ; then
   [ -f $HOME/.fruitpeeler ] || { mv -v $HOME/.crackDpck $HOME/.fruitpeeler; }
 fi

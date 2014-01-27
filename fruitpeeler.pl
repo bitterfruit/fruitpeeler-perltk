@@ -18,7 +18,7 @@ use MIME::Base64;
 # binmode OUTP, ':encoding(UTF-8)';
 
 # Global Variables
-$version = "0.36b (20140124)";
+$version = "0.36b (20140127)";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
@@ -28,8 +28,9 @@ foreach (@ARGV) {
   }
 }
 print "FruitPeeler $version by BF\n\n";
-$rar        = "";    # path to rar extracter
-$zip        = "";    # path to 7z/zip extracter.
+%bin=undef;
+$bin{'rar'}{'path'}=""; # path to rar extracter
+$bin{'zip'}{'path'}=""; # path to 7z/zip extracter.
 $configfile = "$ENV{HOME}/.fruitpeeler" ;
 $s_src = $ENV{HOME}; # default entry variable for source path
 $s_dst = $ENV{HOME}; # default entry variable for destination path
@@ -353,8 +354,10 @@ $mbupdate = $mbinfo -> command ( -label =>"Update FruitPeeler!", -underline => 0
   unless($@)
   {
     # required module loaded
+    my $verifyhost = $ENV{ PERL_LWP_SSL_VERIFY_HOSTNAME}; # remember it.
+    $ENV{ PERL_LWP_SSL_VERIFY_HOSTNAME}=0;
     my $ua2 = LWP::UserAgent->new(timeout => 60, agent => 'FruitPeeler $version');
-		my $url = "http://192.168.137.79:8080/hello?name=$version";
+		my $url = "https://raw.github.com/bitterfruit/fruitpeeler-perltk/master/fruitpeeler.pl";
     print "we made it\n";
     my $res;
     MAIN: for my $retries (0..2) {
@@ -363,6 +366,7 @@ $mbupdate = $mbinfo -> command ( -label =>"Update FruitPeeler!", -underline => 0
       if ($res->is_success) {
          printf("OK (%.2f KiB)\n", length($res->content) / 1024);
          updatefruitpeeler($res->content);
+         $ENV{ PERL_LWP_SSL_VERIFY_HOSTNAME} = $verifyhost;
          return;
       } else {
          print color 'yellow';
@@ -372,6 +376,7 @@ $mbupdate = $mbinfo -> command ( -label =>"Update FruitPeeler!", -underline => 0
       last if $res->status_line =~ /^(400|401|403|404|405|406|407|410)/;
       sleep(2) if $retries<4;
     }
+    $ENV{ PERL_LWP_SSL_VERIFY_HOSTNAME} = $verifyhost;
     $mw -> messageBox(-type=>"ok", -message=>"Unable to snag the latest FruitPeeler version.");
   }
   else {
@@ -384,41 +389,55 @@ $mbupdate = $mbinfo -> command ( -label =>"Update FruitPeeler!", -underline => 0
                             
 sub updatefruitpeeler {
   my $html = shift;
-#  check_dir("FruitPeelerTEMP");
-  my $isSave=0;
-  my $md5 = "";
-  my $base64data = "";
-  foreach ( split /\n/, $html ) {
-    $isSave=0 if /---end base64---/;
-    $base64data = $base64data ."$_\n" if $isSave;
-    $isSave=1 if /---start base64---/;
-    $md5=lc($1) if /md5=([a-f0-9]+)/;
-    #print FILE "$_\n" if /[a-zA-Z0-9\/\=]{50,}/;
+  return if $html eq "";
+  my $path = "/usr/bin" if -d "/usr/bin";
+  $path = "/usr/local/bin" if -d "/usr/local/bin";
+  if (-f "/usr/bin/fruitpeeler" && -d "/usr/local/bin" ) {
+    system("rm -v /usr/bin/fruitpeeler")
   }
-  $base64data=~tr#A-Za-z0-9+/\.\_##cd; # remove non-bas64 chars
-  $base64data=~tr#A-Za-z0-9+/# -_#; # translate sets
-  open(FILE,">","/usr/bin/fruitpeeler_new") or die $!;
+  print "writing ". $path."/fruitpeeler"."\n";
+  open(FILE,">",$path."/fruitpeeler") or die $!;
   binmode(FILE);
-  print FILE unpack("u",pack("C",32+int(length($1)*6/8)) . $1) while($base64data=~s/(.{60}|.+)//);
+  print FILE $html;
   close(FILE);
-  my $md5new ="";
-  open(PS, "md5sum /usr/bin/fruitpeeler_new 2>&1 |") || die "Failed $!\n";
-  while(<PS>) {
-    lc;
-    #662a78de940ee83046a3be5562b670e5
-    $md5new = $1 if /([a-f0-9]+)/;
-  }
-  print "$md5 $md5new\n";
-  if ($md5new eq $md5) {
-    move("/usr/bin/fruitpeeler_new","/usr/bin/fruitpeeler");
-    chmod(755, "/usr/bin/fruitpeeler");
-    $mw -> messageBox(-type=>"ok", -message=>"FruitPeeler updated. Press OK to restart FruitPeeler.");
-    system("fruitpeeler&"); exit;
-  }
-  else {
-    print "md5 doesn't match. update aborted.";
-    $mw -> messageBox(-type=>"ok", -message=>"MD5 sums doesn't match. Update fail!");
-  }
+  chmod(755, $path."/fruitpeeler");
+  $mw -> messageBox(-type=>"ok", -message=>"FruitPeeler updated. Press OK to restart FruitPeeler.");
+  system("fruitpeeler&"); exit;
+#  check_dir("FruitPeelerTEMP");
+  #my $isSave=0;
+  #my $md5 = "";
+  #my $base64data = "";
+  #foreach ( split /\n/, $html ) {
+  #  $isSave=0 if /---end base64---/;
+  #  $base64data = $base64data ."$_\n" if $isSave;
+  #  $isSave=1 if /---start base64---/;
+  #  $md5=lc($1) if /md5=([a-f0-9]+)/;
+  #  #print FILE "$_\n" if /[a-zA-Z0-9\/\=]{50,}/;
+  #}
+  #$base64data=~tr#A-Za-z0-9+/\.\_##cd; # remove non-bas64 chars
+  #$base64data=~tr#A-Za-z0-9+/# -_#; # translate sets
+  #open(FILE,">","/usr/bin/fruitpeeler_new") or die $!;
+  #binmode(FILE);
+  #print FILE unpack("u",pack("C",32+int(length($1)*6/8)) . $1) while($base64data=~s/(.{60}|.+)//);
+  #close(FILE);
+  #my $md5new ="";
+  #open(PS, "md5sum /usr/bin/fruitpeeler_new 2>&1 |") || die "Failed $!\n";
+  #while(<PS>) {
+  #  lc;
+  #  #662a78de940ee83046a3be5562b670e5
+  #  $md5new = $1 if /([a-f0-9]+)/;
+  #}
+  #print "$md5 $md5new\n";
+  #if ($md5new eq $md5) {
+  #  move("/usr/bin/fruitpeeler_new","/usr/bin/fruitpeeler");
+  #  chmod(755, "/usr/bin/fruitpeeler");
+  #  
+  #  system("fruitpeeler&"); exit;
+  #}
+  #else {
+  #  print "md5 doesn't match. update aborted.";
+  #  $mw -> messageBox(-type=>"ok", -message=>"MD5 sums doesn't match. Update fail!");
+  #}
   return;
 #  chdir("FruitPeelerTEMP");
 #  system("7z x fruitpeeler.7z");
@@ -441,8 +460,8 @@ $tlst_acti -> configure(-xscrollcommand=>['set', $srla_x]);
 $chkb_folders -> deselect();
 $chkb_dstcr -> deselect();
 get_depacker_paths();
-$mbinfo -> command( -label =>"$rar (".get_rar_version($rar).")", -underline => 0);
-$mbinfo -> command( -label =>"$zip (".get_rar_version($zip).")", -underline => 0);
+$mbinfo -> command( -label =>$bin{'rar'}{'path'}." (".$bin{'rar'}{'version'}.")", -underline => 0);
+$mbinfo -> command( -label =>$bin{'zip'}{'path'}." (".$bin{'zip'}{'version'}.")", -underline => 0);
 $mbinfo -> command(-label =>"Exit", -underline => 1, -command => sub { exit } );
 load_configuration();
 refresh_filelist();
@@ -750,17 +769,15 @@ sub extract_selected {
     if ($isVerbosa) { print "percent_done: $percent_done\n"; } 
     $top->update();
     foreach my $pass ( @passlist ) {
-      $arg = "'$rar'\ x -p\"".escape_pass($pass)."\" -o+ -ierr \"$archpath\" \"$destpath\"" if ($archpath =~ /(\.rar)$/i);
-      $arg = "'$zip' x -aoa -y -p\"$pass\" \"$archpath\" -o\"$destpath\"" if ($archpath =~ /\.(7z|7z\.001|zip)$/i);
+      $arg = "'".$bin{'rar'}{'path'}."'\ x -p\"".escape_pass($pass)."\" -o+ -ierr \"$archpath\" \"$destpath\"" if ($archpath =~ /(\.rar)$/i);
+      $arg = "'".$bin{'zip'}{'path'}."' x -aoa -y -p\"$pass\" \"$archpath\" -o\"$destpath\"" if ($archpath =~ /\.(7z|7z\.001|zip)$/i);
 
-      if (isCygwin() && $rar !~ /unrar$|unrar\.exe$/) { # overide the above $arg if cygwin is true
-        $arg = sprintf("'$rar' x -o+ -ierr -p\"%s\" -- \"%s\" \"%s\"",
+      if (isCygwin() && $bin{'rar'}{'path'} !~ /unrar$|unrar\.exe$/) { # overide the above $arg if cygwin is true
+        $arg = sprintf("'".$bin{'rar'}{'path'}."' x -o+ -ierr -p\"%s\" -- \"%s\" \"%s\"",
                         escape_pass($pass),
                         escape_path(win_path($archpath)),
                         escape_path(win_path($destpath)))
-                        if ( $archpath =~ /(\.rar)$/i );
-        #$arg = "'$zip' x -aoa -y -p\"".escape_pass($pass)."\" \"$archives[$idx]\" -o\"$destpath\"" if (($archives[$idx] =~ /(\.rar)$/i) && ($pass =~ m/\"/));
-
+                           if ( $archpath =~ /(\.rar)$/i );
       } # keep @archives unix/cygpath style path to be usable later in the script.
       $arg = "nice -20 ".$arg; # set task to low priority
       print "$arg\n";
@@ -863,46 +880,52 @@ sub get_depacker_paths() {
     push @rarbins, "$path/unrar.exe" if (-f "$path/unrar.exe");
     push @rarbins, "$path/unrar"     if (-f "$path/unrar");
     #push @rarbins, "$path/unrar-nonfree" if (-f "$path/unrar-nonfree");
-    #$rar = "$path/rar" if (-f "$path/rar");
-    #$rar = "$path/rar.exe" if (-f "$path/rar.exe");
-    #$rar = "$path/unrar.exe" if (-f "$path/unrar.exe" and isCygwin());
-    #$rar = "$path/unrar"     if (-f "$path/unrar" and !isCygwin());
-    $zip = "$path/7z"      if (-f "$path/7z");
-    $zip = "$path/7z.exe"  if (-f "$path/7z.exe");
-    #printdeb(2, "fruitpeeler::get_depacker_paths() -> $path - $rar - $zip\n");
+    #$bin{'rar'}{'path'} = "$path/rar" if (-f "$path/rar");
+    #$bin{'rar'}{'path'} = "$path/rar.exe" if (-f "$path/rar.exe");
+    #$bin{'rar'}{'path'} = "$path/unrar.exe" if (-f "$path/unrar.exe" and isCygwin());
+    #$bin{'rar'}{'path'} = "$path/unrar"     if (-f "$path/unrar" and !isCygwin());
+    $bin{'zip'}{'path'} = "$path/7z"      if (-f "$path/7z");
+    $bin{'zip'}{'path'} = "$path/7z.exe"  if (-f "$path/7z.exe");
+    #printdeb(2, "fruitpeeler::get_depacker_paths() -> $path - $bin{'rar'}{'path'} - $bin{'zip'}{'path'}\n");
   }
-  #$rar = "/usr/local/bin/unrar" if (-f "/usr/local/bin/unrar"); # where rarlinux is installed
+  #$bin{'rar'}{'path'} = "/usr/local/bin/unrar" if (-f "/usr/local/bin/unrar"); # where rarlinux is installed
 
   while( scalar(@rarbins)> 0) {
     my $path = pop @rarbins;
     printdeb(2, "found: $path\n" );
-    my $version = get_rar_version($path);
+    my $version = get_bin_version($path);
 
-    # only store path to rar if unrar doesn't exist (prefer unrar)
-    # ignore useless unrar-free.
-    $rar = $path if $path ne "" && $version ne "unrar-free" && $rar !~ /unrar$/i;;
+    # Only store path to rar if unrar doesn't exist (prefer unrar).
+    # Ignore unrar-free.
+    if ($path ne "" && $version ne "unrar-free" &&
+                        $bin{'rar'}{'path'} !~ /unrar$/i) {
+      $bin{'rar'}{'path'} = $path;
+    }
     print "Ignoring unrar-free! ($path)\n" if $version eq "unrar-free";
   }
 
-  if (isCygwin() and $rar !~ /unrar$|unrar\.exe$/) {
+  if (isCygwin() and $bin{'rar'}{'path'} !~ /unrar$|unrar\.exe$/) {
     printdeb(2, "fruitpeeler::get_depacker_paths()->isCygwin true\n");
     if (-e cyg_path("$ENV{PROGRAMFILES}\\WinRAR\\rar.exe")) {
-      $rar = cyg_path("$ENV{PROGRAMFILES}\\WinRAR\\rar.exe");
+      $bin{'rar'}{'path'} = cyg_path("$ENV{PROGRAMFILES}\\WinRAR\\rar.exe");
     }
     if (-e cyg_path("$ENV{ProgramW6432}\\WinRAR\\rar.exe")) {
-      $rar = cyg_path("$ENV{ProgramW6432}\\WinRAR\\rar.exe");
+      $bin{'rar'}{'path'} = cyg_path("$ENV{ProgramW6432}\\WinRAR\\rar.exe");
     }
   }
-  if ($rar eq "" || ! -f $rar) { print "ERROR: Can't find rar executable.\n"; exit 1; }
-  if ($zip eq "" || ! -f $zip) { print "ERROR: Can't find 7z executable.\n"; exit 1; }
+  if ($bin{'rar'}{'path'} eq "" || ! -f $bin{'rar'}{'path'}) { print "ERROR: Can't find rar executable.\n"; exit 1; }
+  if ($bin{'zip'}{'path'} eq "" || ! -f $bin{'zip'}{'path'}) { print "ERROR: Can't find 7z executable.\n"; exit 1; }
+  # finally set versions
+  $bin{'rar'}{'version'} = get_bin_version($bin{'rar'}{'path'});
+  $bin{'zip'}{'version'} = get_bin_version($bin{'zip'}{'path'});
   print "paths to the exec 7z\&rar was finaly set to:\n";
-  print "  - $rar (". get_rar_version($rar) .")\n";
-  print "  - $zip (". get_rar_version($zip) .")\n"; 
+  print "  - ".$bin{'rar'}{'path'}." (". $bin{'rar'}{'version'}.")\n";
+  print "  - ".$bin{'zip'}{'path'}." (". $bin{'zip'}{'version'}.")\n"; 
 }
 
-sub get_rar_version {
+sub get_bin_version {
   my $path = shift;
-  printdeb(2, "fruitpeeler::get_rar_version($path)\n");
+  printdeb(2, "fruitpeeler::get_bin_version($path)\n");
   return "none" if $path eq "";
   return "winrar" if $path =~ /winrar/i;
   if (!isCygwin() || $path =~ /unrar|7z/ ) {
