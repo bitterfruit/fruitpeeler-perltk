@@ -1,0 +1,61 @@
+crackDpck v0.34 readme.txt
+
+Installation & upgrade
+
+  the short version:
+
+     extract fp034, run the install.sh script and follow the instructions.
+
+  the long versions:
+
+  Ubuntu:
+   - Make sure you have closed down crackDpck before installing.
+   - Extract downloaded file fp034.rar to your home directory.
+   - open a console and move to the home directory and fruitpeeler
+     directory (cd ~/fruitpeeler)
+   - To launch the install script, write: sudo ./install.sh
+   - The script should now ask you yes or no on packages to install.
+     These packages are required. Answering no will abort the script:
+        packages: perl, perl-tk, p7zip-full.
+
+     Note:
+       - On RAR versions less than 4.00, and the unrar-free package:
+         Rar v3.96 doesn't handle weird chars very well (weird passwords).
+         The installation will prompt you (yes or no) for installing the
+         propper unrar from rarlab.com. Answer yes to download and install it.
+       - package zenity probably comes with ubuntu. Without zenity the
+         ChooseDirectory dialog windows will look uuglaay.
+
+  Cygwin:
+    - Make sure you have closed down crackDpck before installing.
+    - Extract downloaded file fp034.rar to your home directory.
+    - open a console and move to the homedirectory and fruitpeeler
+      directory (cd ~/fruitpeeler)
+    - To launch the install script, write: ./install.sh
+    - With Cygwin's Setup-x86.exe you will need to get the following packages:
+       Packages: perl, perl-tk, xinit(X11), p7zip. Optional: perl-Win32-GUI
+    - The script will tell you what packages you are missing, if any.
+    - The script asks you if you want a bat file on your desktop to launch the script.
+
+    - You will also need to install WinRAR from rarlab.com if you haven't got WinRAR.
+      Note: The WinRAR from rarlab.com is not 100% compatible with cygwin.
+      With it you will experience problems with RAR archives with doublequotes used in
+      passwords. Advanced Tip: Download the unrar sourcode from rarlab.com's extras section.
+      Compile unrar.exe and move it to the root of your home directory. Now you have
+      a 100% cygwin compatible and updates unrar program that handles passwords
+      with doublequotes.
+
+        Make sure xwin is loaded before starting crackDpck on Cygwin.
+
+Uninstallation:
+
+   short version: run the uninstall.sh script.
+
+   long t-spoon version:
+
+   - Make sure you have closed down crackDpck before installing.
+   - Extract downloaded file fp034.rar to your home directory if you have deleted
+     the fruitpeeler directory in your home directory.
+   - open a console and move to the home directory and fruitpeeler
+     directory (cd ~/fruitpeeler)
+   - To launch the uninstall script write: ./uninstall.sh
