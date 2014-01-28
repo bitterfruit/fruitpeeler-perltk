@@ -18,7 +18,7 @@ use MIME::Base64;
 # binmode OUTP, ':encoding(UTF-8)';
 
 # Global Variables
-$version = "0.362b (20140128)";
+$version = "0.363b (20140128)";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
@@ -1059,7 +1059,7 @@ sub http_get {
       printdeb(2,"fruitpeeler::http_get() - using wget\n");
       my $html = "";
       print "You have wget\n";
-      system("wget -O \"/tmp/fruitpeeler_http_get\" $url");
+      system("wget --no-check-certificate -O \"/tmp/fruitpeeler_http_get\" $url");
       open(TMPFILE,"<","/tmp/fruitpeeler_http_get") || die "$!";
       while (<TMPFILE>) { chomp; $html=$html.$_."\n"; }
       close(TMPFILE);
