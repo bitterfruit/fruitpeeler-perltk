@@ -18,7 +18,7 @@ use MIME::Base64;
 # binmode OUTP, ':encoding(UTF-8)';
 
 # Global Variables
-$version = "0.363b (20140128)";
+$version = "0.364b (20140128)";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
@@ -387,10 +387,12 @@ $mbupdate = $mbinfo -> command ( -label =>"Update FruitPeeler!",
     my $sudo = "";
     if (!isCygwin()) {
       system( "gksu 'rm -v ".$path."/fruitpeeler'" ) if -f $path."/fruitpeeler";
+      system( "gksu 'rm -v /usr/bin/fruitpeeler'" ) if -f "/usr/bin/fruitpeeler";
       system( "gksu 'mv -v /tmp/fruitpeeler_new ".$path."/fruitpeeler'");
     }
     else {
       system( "rm -v ".$path."/fruitpeeler" ) if -f $path."/fruitpeeler";
+      system( "rm -v /usr/bin/fruitpeeler" ) if -f "/usr/bin/fruitpeeler";
       system( "mv -v /tmp/fruitpeeler_new ".$path."/fruitpeeler");
     }
     #chmod(755, $path."/fruitpeeler");
@@ -1026,6 +1028,7 @@ sub http_get {
   printdeb(1,"fruitpeeler::http_get($url)\n");
   eval {
     require LWP::UserAgent;
+    require LWP::Protocol::https;
     my $ua2 = LWP::UserAgent->new(timeout => 60, agent => 'FruitPeeler $version');
 	
   };
@@ -1076,7 +1079,6 @@ sub http_get {
       return $html;
     }
     else {
-      printdeb(2,"fruitpeeler::http_get() - using wget\n");
       print "No tools no means no html. sorry.\n";
       print "You have three options to enable FruitPeeler's http capabilities:\n".
             "1. Install the libwww-perl package,\n".
