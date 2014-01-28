@@ -393,7 +393,7 @@ $mbupdate = $mbinfo -> command ( -label =>"Update FruitPeeler!",
     -message=>"MD5 sums doesn't match. Update fail!");
   }
   return;
-}
+});
 
 
 # Initialize
