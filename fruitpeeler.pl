@@ -18,7 +18,7 @@ use MIME::Base64;
 # binmode OUTP, ':encoding(UTF-8)';
 
 # Global Variables
-$version = "0.361b (20140128)";
+$version = "0.362b (20140128)";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
@@ -353,15 +353,15 @@ $mbupdate = $mbinfo -> command ( -label =>"Update FruitPeeler!",
     return;
   }
   my ($onlver,$onlmd5,$url) = split ",", $raw;
+  if ($onlver eq $version) {
+    $mw -> messageBox(-type=>"ok",
+    -message=>"FruitPeeler is at latest version $version.\n");
+    return;
+  }
   my $newfile = http_get($url);
   if ($newfile eq "") {
     $mw -> messageBox(-type=>"ok",
     -message=>"Unable to update FruitPeeler.\n");
-    return;
-  }
-  if ($onlver eq $version) {
-    $mw -> messageBox(-type=>"ok",
-    -message=>"FruitPeeler is at latest version $version.\n");
     return;
   }
   my $path = "/usr/bin";
@@ -370,27 +370,38 @@ $mbupdate = $mbinfo -> command ( -label =>"Update FruitPeeler!",
   #  system("rm -v /usr/bin/fruitpeeler")
   #}
   print "writing ". $path."/fruitpeeler_new"."\n";
-  open(FILE,">",$path."/fruitpeeler_new") or die $!;
+  open(FILE,">","/tmp/fruitpeeler_new") or die $!;
   binmode(FILE);
-  print FILE $html;
+  print FILE $newfile;
   close(FILE);
-  #chmod(755, $path."/fruitpeeler_new");
-  open(PS, "md5sum /usr/bin/fruitpeeler_new 2>&1 |") || die "Failed $!\n";
+  system("chmod 755 /tmp/fruitpeeler_new");
+  open(PS, "md5sum /tmp/fruitpeeler_new 2>&1 |") || die "Failed $!\n";
   my $md5local = "";
   while(<PS>) {
     lc;
     $md5local = $1 if /([a-f0-9]+)/;
   }
-  print "$md5 $md5new\n";
-  if ($md5new eq $onlmd5) {
-    move( $path."/fruitpeeler_new",$path."/fruitpeeler");
-    chmod(755, $path."/fruitpeeler");
-    $mw -> messageBox(-type=>"ok", -message=>"FruitPeeler updated. Press OK to restart FruitPeeler.");
+  close(PS);
+  print "$md5local $onlmd5\n";
+  if ($md5local eq $onlmd5) {
+    my $sudo = "";
+    if (!isCygwin()) {
+      system( "gksu 'rm -v ".$path."/fruitpeeler'" ) if -f $path."/fruitpeeler";
+      system( "gksu 'mv -v /tmp/fruitpeeler_new ".$path."/fruitpeeler'");
+    }
+    else {
+      system( "rm -v ".$path."/fruitpeeler" ) if -f $path."/fruitpeeler";
+      system( "mv -v /tmp/fruitpeeler_new ".$path."/fruitpeeler");
+    }
+    #chmod(755, $path."/fruitpeeler");
+    $mw -> messageBox(-type=>"ok",
+        -message=>"FruitPeeler updated. Press OK to restart FruitPeeler.");
     system("fruitpeeler&"); exit;
   }
   else {
     $mw -> messageBox(-type=>"ok",
     -message=>"MD5 sums doesn't match. Update fail!");
+      system( "rm -v /tmp/fruitpeeler_new" );
   }
   return;
 });
