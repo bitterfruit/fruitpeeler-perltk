@@ -18,7 +18,7 @@ use MIME::Base64;
 # binmode OUTP, ':encoding(UTF-8)';
 
 # Global Variables
-$version = "0.36b (20140127)";
+$version = "0.361b (20140128)";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
@@ -344,112 +344,56 @@ $menubar = $mw -> Menu(-tearoff=>1);
 $mw -> configure(-menu => $menubar);
 $mbinfo = $menubar -> cascade(-label=>"Info", -underline=>0,
                                   -tearoff => 0);
-$mbupdate = $mbinfo -> command ( -label =>"Update FruitPeeler!", -underline => 0,
-  -command => sub { 
-	eval {
-    require LWP::UserAgent;
-    my $ua2 = LWP::UserAgent->new(timeout => 60, agent => 'FruitPeeler $version');
-	
-  };
-  unless($@)
-  {
-    # required module loaded
-    my $verifyhost = $ENV{ PERL_LWP_SSL_VERIFY_HOSTNAME}; # remember it.
-    $ENV{ PERL_LWP_SSL_VERIFY_HOSTNAME}=0;
-    my $ua2 = LWP::UserAgent->new(timeout => 60, agent => 'FruitPeeler $version');
-		my $url = "https://raw.github.com/bitterfruit/fruitpeeler-perltk/master/fruitpeeler.pl";
-    print "we made it\n";
-    my $res;
-    MAIN: for my $retries (0..2) {
-      printf('Fetching %s..', $url);
-      $res = $ua2->get($url);
-      if ($res->is_success) {
-         printf("OK (%.2f KiB)\n", length($res->content) / 1024);
-         updatefruitpeeler($res->content);
-         $ENV{ PERL_LWP_SSL_VERIFY_HOSTNAME} = $verifyhost;
-         return;
-      } else {
-         print color 'yellow';
-         printf("FAILED (%s)!\n", $res->status_line);
-         print color 'reset';
-      }
-      last if $res->status_line =~ /^(400|401|403|404|405|406|407|410)/;
-      sleep(2) if $retries<4;
-    }
-    $ENV{ PERL_LWP_SSL_VERIFY_HOSTNAME} = $verifyhost;
-    $mw -> messageBox(-type=>"ok", -message=>"Unable to snag the latest FruitPeeler version.");
+$mbupdate = $mbinfo -> command ( -label =>"Update FruitPeeler!",
+  -underline => 0, -command => sub {
+  my $raw = http_get("https://raw.github.com/bitterfruit/fruitpeeler-perltk/master/VERSION");
+  if ($raw eq "") {
+    $mw -> messageBox(-type=>"ok",
+    -message=>"Unable to update FruitPeeler.\n");
+    return;
   }
-  else {
-    # required module NOT loaded
-    print "Error: You need LWP::UserAgent get it with \"cpan LWP::UserAgent\")\n";
+  my ($onlver,$onlmd5,$url) = split ",", $raw;
+  my $newfile = http_get($url);
+  if ($newfile eq "") {
+    $mw -> messageBox(-type=>"ok",
+    -message=>"Unable to update FruitPeeler.\n");
+    return;
   }
-
-
-} );
-                            
-sub updatefruitpeeler {
-  my $html = shift;
-  return if $html eq "";
-  my $path = "/usr/bin" if -d "/usr/bin";
+  if ($onlver eq $version) {
+    $mw -> messageBox(-type=>"ok",
+    -message=>"FruitPeeler is at latest version $version.\n");
+    return;
+  }
+  my $path = "/usr/bin";
   $path = "/usr/local/bin" if -d "/usr/local/bin";
-  if (-f "/usr/bin/fruitpeeler" && -d "/usr/local/bin" ) {
-    system("rm -v /usr/bin/fruitpeeler")
-  }
-  print "writing ". $path."/fruitpeeler"."\n";
-  open(FILE,">",$path."/fruitpeeler") or die $!;
+  #if (-f "/usr/bin/fruitpeeler" && -d "/usr/local/bin" ) {
+  #  system("rm -v /usr/bin/fruitpeeler")
+  #}
+  print "writing ". $path."/fruitpeeler_new"."\n";
+  open(FILE,">",$path."/fruitpeeler_new") or die $!;
   binmode(FILE);
   print FILE $html;
   close(FILE);
-  chmod(755, $path."/fruitpeeler");
-  $mw -> messageBox(-type=>"ok", -message=>"FruitPeeler updated. Press OK to restart FruitPeeler.");
-  system("fruitpeeler&"); exit;
-#  check_dir("FruitPeelerTEMP");
-  #my $isSave=0;
-  #my $md5 = "";
-  #my $base64data = "";
-  #foreach ( split /\n/, $html ) {
-  #  $isSave=0 if /---end base64---/;
-  #  $base64data = $base64data ."$_\n" if $isSave;
-  #  $isSave=1 if /---start base64---/;
-  #  $md5=lc($1) if /md5=([a-f0-9]+)/;
-  #  #print FILE "$_\n" if /[a-zA-Z0-9\/\=]{50,}/;
-  #}
-  #$base64data=~tr#A-Za-z0-9+/\.\_##cd; # remove non-bas64 chars
-  #$base64data=~tr#A-Za-z0-9+/# -_#; # translate sets
-  #open(FILE,">","/usr/bin/fruitpeeler_new") or die $!;
-  #binmode(FILE);
-  #print FILE unpack("u",pack("C",32+int(length($1)*6/8)) . $1) while($base64data=~s/(.{60}|.+)//);
-  #close(FILE);
-  #my $md5new ="";
-  #open(PS, "md5sum /usr/bin/fruitpeeler_new 2>&1 |") || die "Failed $!\n";
-  #while(<PS>) {
-  #  lc;
-  #  #662a78de940ee83046a3be5562b670e5
-  #  $md5new = $1 if /([a-f0-9]+)/;
-  #}
-  #print "$md5 $md5new\n";
-  #if ($md5new eq $md5) {
-  #  move("/usr/bin/fruitpeeler_new","/usr/bin/fruitpeeler");
-  #  chmod(755, "/usr/bin/fruitpeeler");
-  #  
-  #  system("fruitpeeler&"); exit;
-  #}
-  #else {
-  #  print "md5 doesn't match. update aborted.";
-  #  $mw -> messageBox(-type=>"ok", -message=>"MD5 sums doesn't match. Update fail!");
-  #}
+  #chmod(755, $path."/fruitpeeler_new");
+  open(PS, "md5sum /usr/bin/fruitpeeler_new 2>&1 |") || die "Failed $!\n";
+  my $md5local = "";
+  while(<PS>) {
+    lc;
+    $md5local = $1 if /([a-f0-9]+)/;
+  }
+  print "$md5 $md5new\n";
+  if ($md5new eq $onlmd5) {
+    move( $path."/fruitpeeler_new",$path."/fruitpeeler");
+    chmod(755, $path."/fruitpeeler");
+    $mw -> messageBox(-type=>"ok", -message=>"FruitPeeler updated. Press OK to restart FruitPeeler.");
+    system("fruitpeeler&"); exit;
+  }
+  else {
+    $mw -> messageBox(-type=>"ok",
+    -message=>"MD5 sums doesn't match. Update fail!");
+  }
   return;
-#  chdir("FruitPeelerTEMP");
-#  system("7z x fruitpeeler.7z");
-#  system("cat fruitpeeler.pl >>/usr/bin/fruitpeeler");
-#  chdir("..");
-#  system("rm -r FruitPeelerTEMP");
-  #print $res->content;
-
 }
-
-#$mbabout = $menubar -> cascade ( -label => "About", -underline=>0, -tearoff=>0,
-#                                 -command=>sub { print "bblabas\n"  });
 
 
 # Initialize
@@ -893,15 +837,15 @@ sub get_depacker_paths() {
   while( scalar(@rarbins)> 0) {
     my $path = pop @rarbins;
     printdeb(2, "found: $path\n" );
-    my $version = get_bin_version($path);
+    my $binversion = get_bin_version($path);
 
     # Only store path to rar if unrar doesn't exist (prefer unrar).
     # Ignore unrar-free.
-    if ($path ne "" && $version ne "unrar-free" &&
+    if ($path ne "" && $binversion ne "unrar-free" &&
                         $bin{'rar'}{'path'} !~ /unrar$/i) {
       $bin{'rar'}{'path'} = $path;
     }
-    print "Ignoring unrar-free! ($path)\n" if $version eq "unrar-free";
+    print "Ignoring unrar-free! ($path)\n" if $binversion eq "unrar-free";
   }
 
   if (isCygwin() and $bin{'rar'}{'path'} !~ /unrar$|unrar\.exe$/) {
@@ -1065,6 +1009,73 @@ sub tlst_acti_ctrl_a_pressed {
   printdeb(1, "fruitpeeler::tlst_act_ctrl_a_pressed()\n");
   $tlst_acti -> selectionSet('1','end');
 }
+
+sub http_get {
+  my $url = shift;
+  printdeb(1,"fruitpeeler::http_get($url)\n");
+  eval {
+    require LWP::UserAgent;
+    my $ua2 = LWP::UserAgent->new(timeout => 60, agent => 'FruitPeeler $version');
+	
+  };
+  unless($@)
+  {
+    # required module loaded
+    printdeb(2,"fruitpeeler::http_get() - using LWP\n");
+    my $verifyhost = $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME}; # remember it
+    $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
+    my $ua2 = LWP::UserAgent->new(timeout => 60, agent => 'FruitPeeler $version');
+    my $res;
+    MAIN: for my $retries (0..2) {
+      printf('Fetching %s..', $url);
+      $res = $ua2->get($url);
+      if ($res->is_success) {
+         printf("OK (%.2f KiB)\n", length($res->content) / 1024);
+         $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = $verifyhost;
+         return $res->content;
+      } else {
+         printf("FAILED (%s)!\n", $res->status_line);
+      }
+      last if $res->status_line =~ /^(400|401|403|404|405|406|407|410)/;
+      sleep(2) if $retries<4;
+    }
+    $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = $verifyhost;
+    return "";
+  }
+  else {
+    # required module NOT loaded
+    if (-f "/usr/bin/wget") {
+      printdeb(2,"fruitpeeler::http_get() - using wget\n");
+      my $html = "";
+      print "You have wget\n";
+      system("wget -O \"/tmp/fruitpeeler_http_get\" $url");
+      open(TMPFILE,"<","/tmp/fruitpeeler_http_get") || die "$!";
+      while (<TMPFILE>) { chomp; $html=$html.$_."\n"; }
+      close(TMPFILE);
+      system("rm /tmp/fruitpeeler_http_get");
+      return $html;
+    }
+    elsif (-f "/usr/bin/curl") {
+      printdeb(2,"fruitpeeler::http_get() - using curl\n");
+      my $html = "";
+      print "You have curl\n";
+      open(PS, "curl $url |");
+      while (<PS>) { chomp; $html=$html.$_."\n"; }
+      close(PS);
+      return $html;
+    }
+    else {
+      printdeb(2,"fruitpeeler::http_get() - using wget\n");
+      print "No tools no means no html. sorry.\n";
+      print "You have three options to enable FruitPeeler's http capabilities:\n".
+            "1. Install the libwww-perl package,\n".
+            "2. Install the wget package, or\n".
+            "3. Install the curl package.\n";
+      return "";
+    }
+  }
+}
+
 
 sub cyg_path {
   my ($path) = @_;
