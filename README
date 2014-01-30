@@ -1,4 +1,4 @@
-FruitPeeler v0.34 readme.txt
+FruitPeeler v0.36 readme.txt
 
 Fruitpeeler is a archive extracting tool with GUI written in perl-tk.
 FruitPeeler utilizes unrar/7z/zip found on the system.
@@ -13,14 +13,15 @@ Installation & upgrade
 
   the short version:
 
-     extract fp034, run the install.sh script and follow the instructions.
+     Extract fp036.rar, run the install.sh script with root access (sudo), and
+     follow the instructions.
 
   the long versions:
 
   Ubuntu:
    - Make sure you have closed down FruitPeeler before installing.
-   - Extract downloaded file fp034.rar to your home directory.
-   - open a console and move to the home directory and fruitpeeler
+   - Extract downloaded file fp036.rar to your home directory.
+   - Open a console and move to the home directory and fruitpeeler
      directory (cd ~/fruitpeeler)
    - To launch the install script, write: sudo ./install.sh
    - The script should now ask you yes or no on packages to install.
@@ -30,15 +31,13 @@ Installation & upgrade
      Note:
        - On RAR versions less than 4.00, and the unrar-free package:
          Rar v3.96 doesn't handle weird chars very well (weird passwords).
-         The installation will prompt you (yes or no) for installing the
-         propper unrar from rarlab.com. Answer yes to download and install it.
        - package zenity probably comes with ubuntu. Without zenity the
          ChooseDirectory dialog windows will look uuglaay.
 
   Cygwin:
     - Make sure you have closed down FruitPeeler before installing.
-    - Extract downloaded file fp034.rar to your home directory.
-    - open a console and move to the homedirectory and fruitpeeler
+    - Extract downloaded file fp036.rar to your home directory.
+    - Open a console and move to the homedirectory and fruitpeeler
       directory (cd ~/fruitpeeler)
     - To launch the install script, write: ./install.sh
     - With Cygwin's Setup-x86.exe you will need to get the following packages:
@@ -56,7 +55,8 @@ Installation & upgrade
 
         Make sure xwin is loaded before starting FruitPeeler on Cygwin.
 
-Uninstallation:
+
+Uninstallation (Cygwwin & ubuntu):
 
    short version: run the uninstall.sh script.
 
@@ -68,3 +68,6 @@ Uninstallation:
    - open a console and move to the home directory and fruitpeeler
      directory (cd ~/fruitpeeler)
    - To launch the uninstall script write: ./uninstall.sh
+     On ubuntu you may need to write: sudo ./uninstall.sh
+
+
