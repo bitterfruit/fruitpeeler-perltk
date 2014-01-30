@@ -1,9 +1,19 @@
 history.txt
 
+0.36()
+- Quicker launch. (Checking rar/unrar/7z versions only once).
+- Menu bar.
+  - Online Update option. Uses LWP, wget or curl to access the web.
+  - Show versions of rar/unrar/7z programs.
+- Fruitpeeler moved to /usr/local/bin .
+
+
 0.35(20140117)
 install.sh
-- yikes, installing rar and unrar from rarlabs caused conflict with ubuntu's
-  choice of rar/unrar. remove /usr/local/bin/rar and /usr/local/bin/unrar to uninstall.
+- Installing rar and unrar from rarlab's website cause conflict with file-roller's
+  choice of rar/unrar. Moving /usr/local/bin/rar and /usr/local/bin/unrar to
+  your home folder for example will solve that problem. It's nice to have
+  unrar 5.01 because the rar format has changed in version 5.x.
 - The script checks if you've got the ubuntu packages rar or unrar. One of those are
   good enough for fruitpeeler. If non of those are present, the script will ask the
   user a y/n question to install the unrar package. The package unrar in the ubuntu
@@ -11,11 +21,12 @@ install.sh
   fruitpeeler. It used to be 3.94, and that caused problems with unicode in filenames
   and passwords, and that is why we used to install rar from rarlab manually.
 fruitpeeler.pl
-- improved clasification of what rar software is installed on ubuntu. The proble is that
-  the ubuntu packages unrar and unrar-free will have the same command name (unrar), and
-  we do not want the unrar-free because it is ancient. The script now ignores it.
-  The script will choose unrar in home directory over anything else, and if unrar is
-  not present it will look for rar. If no rar program are present, fruitpeeler won't start.
+- improved clasification of what rar software is installed on ubuntu. The problem
+  is that the ubuntu packages unrar and unrar-free will have the same command name
+  (unrar), and we do not want the unrar-free because it is ancient. The script now
+  ignores it. The script will choose unrar in home directory over anything
+  else, and if unrar is not present it will look for rar. If no rar program are
+  present, fruitpeeler won't start.
 
 0.34(20140115)
 install.sh:

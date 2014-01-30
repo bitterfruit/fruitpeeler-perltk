@@ -10,33 +10,31 @@ installonubuntu () {
   installperltk=0
   installp7zip=0
   installunrar=0
+  installzenity=0
   if hash perl >/dev/null 2>&1; then
     echo "You have perl ... OK"
   else
     answer=""
-    read -n1 -p"PERL is missing, install it now? (y/n)" answer
+    read -n1 -p"PERL is missing, install it? (y/n)" answer
     echo ""
     echo ""
-    [[ "$answer" == "y" ]] || { installfailed; }
-    [[ "$answer" == "y" ]] && { installperl=1; }
+    [[ "$answer" == "y" ]] && { installperl=1; } || { installfailed; }
   fi
   if dpkg -s perl-Tk 2>&1|grep "Status: install ok" >/dev/null; then
     echo "You have perl-tk ... OK"
   else
     answer=""
-    read -n1 -p"The package perl-tk is needed, install it now? (y/n) " answer
+    read -n1 -p"The package perl-tk is needed, install it? (y/n) " answer
     echo ""
-    [[ "$answer" == "y" ]] || { installfailed; }
-    [[ "$answer" == "y" ]] && { installperltk=1; }
+    [[ "$answer" == "y" ]] && { installperltk=1; } || { installfailed; }
   fi
   if dpkg -s p7zip-full 2>&1|grep "Status: install ok" >/dev/null; then
     echo "You have p7zip-full ... OK"
   else
     answer=""
-    read -n1 -p"The package p7zip-full is needed, install it now? (y/n) " answer
+    read -n1 -p"The package p7zip-full is needed, install it? (y/n) " answer
     echo ""
-    [[ "$answer" == "y" ]] || { installfailed; }
-    [[ "$answer" == "y" ]] && { installp7zip=1; }
+    [[ "$answer" == "y" ]] && { installp7zip=1; } || { installfailed; }
 
   fi
   if dpkg -s unrar 2>&1|grep "Status: install ok" >/dev/null; then
@@ -47,24 +45,27 @@ installonubuntu () {
     else
       answer=""
       echo "You have either rar or unrar packages. We need one of those."
-      read -n1 -p"Install package unrar now? (y/n) " answer
+      read -n1 -p"Install package unrar? (y/n) " answer
       echo ""
-      [[ "$answer" == "y" ]] || { installfailed; }
-      [[ "$answer" == "y" ]] && { installunrar=1; }
+      [[ "$answer" == "y" ]] && { installunrar=1; } || { installfailed; }
     fi
   fi
-
-  [[ $installperl -eq 1 || $installperltk -eq 1 || $installp7zip -eq 1 || $installunrar -eq 1 ]] && {
-    echo " ------- launching apt-get"
-  }
+  if dpkg -s zenity 2>&1|grep "Status: install ok" >/dev/null; then
+    echo "You have zenity ... OK"
+  else
+    answer=""
+    echo "Package zenity is recomended for pretty SelectDirectory Dialogs."
+    echo "(which is nicer than the ancient perltk variant)"
+    read -n1 -p"Install package zenity now? (y/n)" answer
+    echo ""
+    [[ "$answer" == "y" ]] && { installzenity=1; }
+  fi
   [[ $installperl -eq 1 ]] && { apt-get install perl; }
   [[ $installperltk -eq 1 ]] && { apt-get install perl-tk; }
   [[ $installp7zip -eq 1 ]] && { apt-get install p7zip-full; }
   [[ $installunrar -eq 1 ]] && { apt-get install unrar; }
+  [[ $installzenity -eq 1 ]] && { apt-get install zenity; }
 
-  [[ $installperl -eq 1 || $installperltk -eq 1 || $installp7zip -eq 1 || $installrar -eq 1 ]] && {
-    echo " ------- end of apt-get"
-  }
   dpkg -s zenity 2>&1|grep "Status: install ok" >/dev/null || {
     apt-get install zenity;
   }
@@ -135,7 +136,8 @@ installoncygwin () {
 }
 #http://stackoverflow.com/questions/592620/how-to-check-if-a-program-exists-from-a-bash-script
 
-echo "Install-script for FruitPeeler."
+echo -e "\e[0m\e[4mInstall-script for FruitPeeler.\e[0m"
+echo ""
 fail=0
 
 # Determine OS
