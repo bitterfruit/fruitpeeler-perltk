@@ -18,7 +18,7 @@ use MIME::Base64;
 # binmode OUTP, ':encoding(UTF-8)';
 
 # Global Variables
-$version = "0.365b (20140129)";
+$version = "0.36 (20140131)";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
