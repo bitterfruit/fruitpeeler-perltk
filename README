@@ -1,4 +1,4 @@
-FruitPeeler v0.36 readme.txt
+FruitPeeler v0.37 readme.txt
 
 Fruitpeeler is a archive extracting tool with GUI written in perl-tk.
 FruitPeeler utilizes unrar/7z/zip found on the system.
@@ -11,63 +11,52 @@ for that purpose fruitpeeler is too slow anyway.
 
 Installation & upgrade
 
-  the short version:
+  - Installation using command-lines and wget
+       wget https://github.com/bitterfruit/fruitpeeler-perltk/archive/master.zip
+       unzip master.zip && rm -v master.zip
+       cd fruitpeeler-perltk-master/
+       sudo ./install.sh
+         (drop the sudo on Cygwin)
 
-     Extract fp036.rar, run the install.sh script with root access (sudo), and
-     follow the instructions.
+    or
 
-  the long versions:
+  - Click the "Download ZIP" button on GitHub to download FruitPeeler.
+       https://github.com/bitterfruit/fruitpeeler-perltk
 
   Ubuntu:
-   - Make sure you have closed down FruitPeeler before installing.
-   - Extract downloaded file fp036.rar to your home directory.
-   - Open a console and move to the home directory and fruitpeeler
-     directory (cd ~/fruitpeeler)
-   - To launch the install script, write: sudo ./install.sh
-   - The script should now ask you yes or no on packages to install.
-     These packages are required. Answering no will abort the script:
-        packages: perl, perl-tk, p7zip-full.
+    - Extract the zip file and run the install script:
+         sudo ./install.sh
+    - The script should now ask you yes or no on packages to install.
+      These packages are required. Answering no will abort the script:
+         packages: perl, perl-tk, p7zip-full.
 
-     Note:
-       - On RAR versions less than 4.00, and the unrar-free package:
-         Rar v3.96 doesn't handle weird chars very well (weird passwords).
-       - package zenity probably comes with ubuntu. Without zenity the
-         ChooseDirectory dialog windows will look uuglaay.
+      Note:
+        - On RAR versions less than 4.00, and the unrar-free package:
+          Rar v3.96 doesn't handle weird chars very well (weird passwords).
+        - package zenity probably comes with ubuntu. Without zenity the
+          ChooseDirectory dialog windows will look uuglaay.
 
   Cygwin:
-    - Make sure you have closed down FruitPeeler before installing.
-    - Extract downloaded file fp036.rar to your home directory.
-    - Open a console and move to the homedirectory and fruitpeeler
-      directory (cd ~/fruitpeeler)
-    - To launch the install script, write: ./install.sh
-    - With Cygwin's Setup-x86.exe you will need to get the following packages:
-       Packages: perl, perl-tk, xinit(X11), p7zip. Optional: perl-Win32-GUI
+    - Extract the zip file and run the install script:
+         ./install.sh
     - The script will tell you what packages you are missing, if any.
-    - The script asks you if you want a bat file on your desktop to launch the script.
+      With Cygwin's Setup-x86.exe you will need to get the following packages:
+         Packages: perl, perl-tk, xinit, p7zip. Optional: perl-Win32-GUI
 
-    - You will also need to install WinRAR from rarlab.com if you haven't got WinRAR.
-      Note: The WinRAR from rarlab.com is not 100% compatible with cygwin.
-      With it you will experience problems with RAR archives with doublequotes used in
-      passwords. Advanced Tip: Download the unrar sourcode from rarlab.com's extras section.
-      Compile unrar.exe and move it to the root of your home directory. Now you have
-      a 100% cygwin compatible and updates unrar program that handles passwords
-      with doublequotes.
-
-        Make sure xwin is loaded before starting FruitPeeler on Cygwin.
-
+    - You will also need to install WinRAR from rarlab.com if you haven't
+      got it. WinRAR from rarlab.com is not 100% compatible with Cygwin.
+      Known problems with WinRAR and Cygwin: RAR archives with doublequotes used
+      in passwords.
+          Advanced Tip: Download the unrar sourcode from rarlab.com's
+      extras section. Compile unrar.exe and move it to the root of your home
+      directory, or install it. Now you have a 100% cygwin compatible and
+      updates unrar program that handles passwords with doublequotes.
+      Assuming that you have installed the package make and gnu-gcc, this
+      is how you can compile and install it:
+          make
+          make install
 
 Uninstallation (Cygwwin & ubuntu):
 
-   short version: run the uninstall.sh script.
-
-   long t-spoon version:
-
-   - Make sure you have closed down FruitPeeler before installing.
-   - Extract downloaded file fp034.rar to your home directory if you have deleted
-     the fruitpeeler directory in your home directory.
-   - open a console and move to the home directory and fruitpeeler
-     directory (cd ~/fruitpeeler)
-   - To launch the uninstall script write: ./uninstall.sh
-     On ubuntu you may need to write: sudo ./uninstall.sh
-
+    Run the uninstall.sh script. Use sudo on ubuntu.
 
