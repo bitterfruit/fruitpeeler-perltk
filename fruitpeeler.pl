@@ -18,7 +18,7 @@ use MIME::Base64;
 # binmode OUTP, ':encoding(UTF-8)';
 
 # Global Variables
-$version = "0.36 (20140131)";
+$version = "0.37b ()";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
@@ -49,6 +49,14 @@ $deletearchive = 0; #checkbox variable
 
 # Main Window
 
+if ( isCygwin() && ! -f "/tmp/.X0-lock" ) {
+  # start XWin Server
+  #system("X :0 -multiwindow&");
+  print "startxwin\n";
+  system("run.exe /usr/bin/bash.exe -l -c /usr/bin/startxwin.exe&");
+  while( -f "/tmp/.X0-lock" ) { sleep(1); }
+  sleep(1);
+}
 my $mw = new MainWindow(title=>"FruitPeeler $version");
 
 
