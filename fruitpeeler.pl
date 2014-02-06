@@ -18,6 +18,7 @@ use MIME::Base64;
 # binmode OUTP, ':encoding(UTF-8)';
 
 # Global Variables
+
 $version = "0.37b ()";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
@@ -41,10 +42,12 @@ $s_dst = $ENV{HOME}; # default entry variable for destination path
 my $cygwin_basepath = qx/cygpath -w \// if isCygwin();
 chomp($cygwin_basepath)                 if isCygwin();
 
-$s_dstchoice = "Source"; # extract to Source or destination
-$dstcreatefolders = 1; #checkbox variable
-$createfolders = 0; #checkbox variable
-$deletearchive = 0; #checkbox variable
+# options
+$opt{'destchoice'} = "Source"; # radiobutton var to Source or dest.
+$opt{'destcrfold'} = 1; #checkbox variable on frame
+$opt{'crfold'}     = 0; #checkbox variable on frame
+$opt{'delarch'}    = 0; #checkbox variable on frame
+$opt{'nicelevel'}  = 0; #radiobutton variable on menubar
 
 
 # Main Window
@@ -159,14 +162,14 @@ my $but_src = $frm_path -> Button(-text=>"Browse",
                                    -pady=>1, -image=>$image_browse);
 my $lbl_choice = $frm_path -> Label(-text=>"Extract to ");
 my $rdb_src = $frm_path -> Radiobutton(-text=>"Source", -value=>"Source",
-                                       -variable=>\$s_dstchoice,
+                                       -variable=>\$opt{'destchoice'},
                                        -command=>\&rdb_change );
 my $rdb_dst = $frm_path -> Radiobutton(-text     =>"Destination",
                                        -value    =>"Destination",
-                                       -variable =>\$s_dstchoice, 
+                                       -variable =>\$opt{'destchoice'}, 
                                        -command  =>\&rdb_change );
 my $chkb_dstcr = $frm_path -> Checkbutton(-text=>"create folders in dest based on selection",
-                                            -variable=>\$dstcreatefolders,
+                                            -variable=>\$opt{'destcrfold'},
                                             -command =>\&save_configuration);
 my $lbl_dst  = $frm_path -> Label(-text=>"Destination:");
 #my $ent_dst  = $frm_path -> Entry(-textvariable=>\$s_dst,
@@ -222,10 +225,10 @@ my $style_file = $mw->ItemStyle('text', -foreground => 'black',
 my $srla_x = $frm_acti -> Scrollbar(-orient=>'horizontal',
                                     -command=>[xview=>$tlst_acti]);
 my $chkb_folders = $frm_acti -> Checkbutton(-text=>"CreateFolders",
-                                            -variable=>\$createfolders,
+                                            -variable=>\$opt{'crfold'},
                                             -command =>\&save_configuration);
 my $chkb_delete  = $frm_acti -> Checkbutton(-text=>"DeleteArchive",
-                                            -variable=>\$deletearchive,
+                                            -variable=>\$opt{'delarch'},
                                             -command =>\&save_configuration );
 my $but_extract = $frm_acti -> Button(-text=>"Extract",-image=>$image_extract,
                             -relief=>'flat', -command=>\&extract_selected );
@@ -350,9 +353,11 @@ $mw->bind( $mw, '<Configure>' => sub {
 
 $menubar = $mw -> Menu(-tearoff=>1);
 $mw -> configure(-menu => $menubar);
-$mbinfo = $menubar -> cascade(-label=>"Info", -underline=>0,
+$mbcinfo = $menubar -> cascade(-label=>"Info", -underline=>0,
                                   -tearoff => 0);
-$mbupdate = $mbinfo -> command ( -label =>"Update FruitPeeler!",
+$mbcopt  = $menubar -> cascade(-label=>"Options", -underline=>0, -tearoff =>0);
+
+$mbupdate = $mbcinfo -> command ( -label =>"Update FruitPeeler!",
   -underline => 0, -command => sub {
   my $raw = http_get("https://raw.github.com/bitterfruit/fruitpeeler-perltk/master/VERSION");
   if ($raw eq "") {
@@ -415,6 +420,11 @@ $mbupdate = $mbinfo -> command ( -label =>"Update FruitPeeler!",
   }
   return;
 });
+$mbcopt->radiobutton( -label=>'nice -20',-value=>'-20', -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
+$mbcopt->radiobutton( -label=>'nice 0',  -value=>'0',   -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
+$mbcopt->radiobutton( -label=>'nice 9',  -value=>'9',   -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
+$mbcopt->radiobutton( -label=>'nice 19', -value=>'19',  -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
+$mbcopt->separator();
 
 
 # Initialize
@@ -425,9 +435,9 @@ $tlst_acti -> configure(-xscrollcommand=>['set', $srla_x]);
 $chkb_folders -> deselect();
 $chkb_dstcr -> deselect();
 get_depacker_paths();
-$mbinfo -> command( -label =>$bin{'rar'}{'path'}." (".$bin{'rar'}{'version'}.")", -underline => 0);
-$mbinfo -> command( -label =>$bin{'zip'}{'path'}." (".$bin{'zip'}{'version'}.")", -underline => 0);
-$mbinfo -> command(-label =>"Exit", -underline => 1, -command => sub { exit } );
+$mbcinfo -> command( -label =>$bin{'rar'}{'path'}." (".$bin{'rar'}{'version'}.")", -underline => 0);
+$mbcinfo -> command( -label =>$bin{'zip'}{'path'}." (".$bin{'zip'}{'version'}.")", -underline => 0);
+$mbcinfo -> command(-label =>"Exit", -underline => 1, -command => sub { exit } );
 load_configuration();
 refresh_filelist();
 # my $medialst_mw = $mw -> Listbox( -height=>21,-width=>58,
@@ -438,7 +448,7 @@ refresh_filelist();
 MainLoop;
 
 
-# functions
+# Functions
 
 sub browse_src {
   printdeb(1, "fruitpeeler::browse_src()\n");
@@ -744,7 +754,7 @@ sub extract_selected {
                         escape_path(win_path($destpath)))
                            if ( $archpath =~ /(\.rar)$/i );
       } # keep @archives unix/cygpath style path to be usable later in the script.
-      $arg = "nice -20 ".$arg; # set task to low priority
+      $arg = "nice -n".$opt{'nicelevel'}." ".$arg if $opt{'nicelevel'} ne "0";
       print "$arg\n";
 
       my $return = system ( $arg );
@@ -753,7 +763,7 @@ sub extract_selected {
       printdeb(2, "$return\n");
       printdeb(2, "fruitpeeler::extract_selected() -> child exited with value $return\n");
       if ( $return == 0 or $return == 9 ) { # success (return==9writeerror also success, (linefeedfilename problem))
-        if ( $deletearchive ) {
+        if ( $opt{'delarch'} ) {
           if ( $archpath !~ /(.*)(\.part)(1|01|001)(\.rar)$/i &&
                $archpath !~ /(.*)(\.7z\.001)$/i ) {
             system ( "rm", "$archpath" );
@@ -823,15 +833,15 @@ sub destfolder {
   my $folder = $file;
   $folder =~ s/(\.part(1|01|001))$//;
   my @path;
-  if ( $s_dstchoice eq 'Source' ) {
+  if ( $opt{'destchoice'} eq 'Source' ) {
     push @path, $s_src;
     push @path, $reldir if $reldir ne "";
   }
   else {
     push @path, $s_dst;
-    push @path, $reldir if $reldir ne "" && $dstcreatefolders == 1;
+    push @path, $reldir if $reldir ne "" && $opt{'destcrfold'} == 1;
   }
-  push @path, $folder if $createfolders == 1;
+  push @path, $folder if $opt{'crfold'} == 1;
   return join( "/", @path )."/";
 }
 
@@ -938,16 +948,17 @@ sub load_configuration {
   #my ($label, $data);
   my $enc = find_encoding("utf-8");
   while(<FILE>) {
-    my ($label, $data) = /(srce|dste|pass|dstc|dstf|crtf|dela)\=(.*)/;
+    my ($label, $data) = /(srce|dste|pass|dstc|dstf|crtf|dela|nice)\=(.*)/;
     $ent_src ->  insert('end', $enc->decode($data)) if $label eq "srce" && (-e $data);
     $ent_dst ->  insert('end', $enc->decode($data)) if $label eq "dste" && (-e $data);
     $data = decode_base64($data)          if $label eq "pass";
     $txt_plst -> insert('end', $enc->decode($data)) if $label eq "pass";
     $txt_plst -> insert('end', "\n")      if $label eq "pass";
-    $s_dstchoice   = $data                if $label eq "dstc";
-    $dstcreatefolders = $data             if $label eq "dstf";
-    $createfolders = $data                if $label eq "crtf";
-    $deletearchive = $data                if $label eq "dela";
+    $opt{'destchoice'} = $data            if $label eq "dstc";
+    $opt{'destcrfold'} = $data            if $label eq "dstf";
+    $opt{'crfold'}     = $data            if $label eq "crtf";
+    $opt{'delarch'}    = $data            if $label eq "dela";
+    $opt{'nicelevel'}  = $data            if $label eq "nice";
   }
   $s_src = $ent_src->get('0'); # set browseentry to first element
   $s_dst = $ent_dst->get('0'); # ..
@@ -979,16 +990,17 @@ sub save_configuration {
   foreach $pass ( split (/\n/, encode('utf8', $txt_plst->get('1.0','end'))) ) {
     print $fh "pass=" . encode_base64($pass,"") . "\n";
   }
-  print $fh "dstc=$s_dstchoice\n";
-  print $fh "dstf=$dstcreatefolders\n";
-  print $fh "crtf=$createfolders\n";
-  print $fh "dela=$deletearchive\n";
+  print $fh "dstc=".$opt{'destchoice'}."\n";
+  print $fh "dstf=".$opt{'destcrfold'}."\n";
+  print $fh "crtf=".$opt{'crfold'}."\n";
+  print $fh "dela=".$opt{'delarch'}."\n";
+  print $fh "nice=".$opt{'nicelevel'}."\n";
   close($fh);
 }
 
 sub rdb_change {
   printdeb(1, "fruitpeeler::rdb_change()\n");
-  if ($s_dstchoice eq "Source" ) {
+  if ($opt{'destchoice'} eq "Source" ) {
     $lbl_dst    -> configure(-state=>"disabled");
     $ent_dst    -> configure(-state=>"disabled");
     $but_dst    -> configure(-state=>"disabled");
