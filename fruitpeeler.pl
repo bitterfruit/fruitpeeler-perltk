@@ -48,7 +48,7 @@ $opt{'destcrfold'} = 1; #checkbox variable on frame
 $opt{'crfold'}     = 0; #checkbox variable on frame
 $opt{'delarch'}    = 0; #checkbox variable on frame
 $opt{'nicelevel'}  = 0; #radiobutton variable on menubar
-
+$opt{'scanfolders'}= 0;
 
 # Main Window
 
@@ -425,6 +425,7 @@ $mbcopt->radiobutton( -label=>'nice 0',  -value=>'0',   -variable =>\$opt{'nicel
 $mbcopt->radiobutton( -label=>'nice 9',  -value=>'9',   -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
 $mbcopt->radiobutton( -label=>'nice 19', -value=>'19',  -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
 $mbcopt->separator();
+$mbcopt -> checkbutton(-label=>"ScanFolders", -variable=>\$opt{'scanfolders'}, -command => sub { save_configuration(); refresh_filelist(); } );
 
 
 # Initialize
@@ -648,7 +649,9 @@ sub refresh_filelist {
     #  if (isFirstArchiveFile($file)) { $dirempty=0; last; }
     #}
     #closedir(DIR);
-    list_files_recursive("$s_src/$dir", \%archives); # get files
+    my $scandepth = 1;
+    $scandepth = 9 if $opt{'scanfolders'};
+    list_files_recursive("$s_src/$dir", \%archives, $scandepth); # get files
     foreach(keys %archives) { # filter by isFirstArchive
       $hasarchive=1 if isFirstArchiveFile($_);
     }
@@ -948,7 +951,7 @@ sub load_configuration {
   #my ($label, $data);
   my $enc = find_encoding("utf-8");
   while(<FILE>) {
-    my ($label, $data) = /(srce|dste|pass|dstc|dstf|crtf|dela|nice)\=(.*)/;
+    my ($label, $data) = /(srce|dste|pass|dstc|dstf|crtf|dela|nice|scfo)\=(.*)/;
     $ent_src ->  insert('end', $enc->decode($data)) if $label eq "srce" && (-e $data);
     $ent_dst ->  insert('end', $enc->decode($data)) if $label eq "dste" && (-e $data);
     $data = decode_base64($data)          if $label eq "pass";
@@ -959,6 +962,7 @@ sub load_configuration {
     $opt{'crfold'}     = $data            if $label eq "crtf";
     $opt{'delarch'}    = $data            if $label eq "dela";
     $opt{'nicelevel'}  = $data            if $label eq "nice";
+    $opt{'scanfolders'}= $data            if $label eq "scfo";
   }
   $s_src = $ent_src->get('0'); # set browseentry to first element
   $s_dst = $ent_dst->get('0'); # ..
@@ -995,6 +999,7 @@ sub save_configuration {
   print $fh "crtf=".$opt{'crfold'}."\n";
   print $fh "dela=".$opt{'delarch'}."\n";
   print $fh "nice=".$opt{'nicelevel'}."\n";
+  print $fh "scfo=".$opt{'scanfolders'}."\n";
   close($fh);
 }
 
@@ -1187,16 +1192,17 @@ sub isCygwin {
 }
 
 sub list_files_recursive {
-  my ($path, $filehash, $level) = @_;
+  my ($path, $filehash, $maxdepth, $level) = @_;
   my $nkeys = keys %{$filehash};
-  $level=0 if !defined($level);
+  $maxdepth = 9 if !defined($maxdepth);
+  $level = 0 if !defined($level);
   if ($level>0) {
     printdeb (3, "fr..::list_files_recursive() $level $nkeys -> $path\n");
   }
   else {
     printdeb (2, "fr..::list_files_recursive() $level $nkeys -> $path\n");
   }
-  return if $level > 6;
+  return if $level >= $maxdepth;
   return if $nkeys > 1000;
   my @dirs =();
   opendir(DIR, $path) or print "Error: $!\n";
@@ -1211,7 +1217,7 @@ sub list_files_recursive {
   }
   closedir(DIR);
   foreach my $dir (@dirs) {
-    list_files_recursive($path.$dir."/", $filehash, $level+1);
+    list_files_recursive($path.$dir."/", $filehash, $maxdepth, $level+1);
   }
 }
 
