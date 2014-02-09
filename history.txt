@@ -1,6 +1,12 @@
 history.txt
 
-0.36()
+0.37(20140209)
+- New options on Menubar
+  - Nice levels (cpu priority)
+  - ScanFolders an option to switch of recursive search for archvies.
+- Cygwin: Automatically run "startxwin" unless already started.
+
+0.36(20140131)
 - Quicker launch. (Checking rar/unrar/7z versions only once).
 - Menu bar.
   - Online Update option. Uses LWP, wget or curl to access the web.
