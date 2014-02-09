@@ -17,9 +17,10 @@ use MIME::Base64;
 # binmode INP, ':encoding(UTF-8)';
 # binmode OUTP, ':encoding(UTF-8)';
 
+
 # Global Variables
 
-$version = "0.37b ()";
+$version = "0.37 (20140209)";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
@@ -49,6 +50,7 @@ $opt{'crfold'}     = 0; #checkbox variable on frame
 $opt{'delarch'}    = 0; #checkbox variable on frame
 $opt{'nicelevel'}  = 0; #radiobutton variable on menubar
 $opt{'scanfolders'}= 0;
+
 
 # Main Window
 
