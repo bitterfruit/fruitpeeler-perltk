@@ -20,7 +20,7 @@ use MIME::Base64;
 
 # Global Variables
 
-$version = "0.37 (20140209)";
+$version = "0.38 ()";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
@@ -422,8 +422,8 @@ $mbupdate = $mbcinfo -> command ( -label =>"Update FruitPeeler!",
   }
   return;
 });
-$mbcopt->radiobutton( -label=>'nice -20',-value=>'-20', -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
 $mbcopt->radiobutton( -label=>'nice 0',  -value=>'0',   -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
+$mbcopt->radiobutton( -label=>'nice 5',  -value=>'5',   -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
 $mbcopt->radiobutton( -label=>'nice 9',  -value=>'9',   -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
 $mbcopt->radiobutton( -label=>'nice 19', -value=>'19',  -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
 $mbcopt->separator();
@@ -958,13 +958,14 @@ sub load_configuration {
     $ent_dst ->  insert('end', $enc->decode($data)) if $label eq "dste" && (-e $data);
     $data = decode_base64($data)          if $label eq "pass";
     $txt_plst -> insert('end', $enc->decode($data)) if $label eq "pass";
-    $txt_plst -> insert('end', "\n")      if $label eq "pass";
-    $opt{'destchoice'} = $data            if $label eq "dstc";
-    $opt{'destcrfold'} = $data            if $label eq "dstf";
-    $opt{'crfold'}     = $data            if $label eq "crtf";
-    $opt{'delarch'}    = $data            if $label eq "dela";
-    $opt{'nicelevel'}  = $data            if $label eq "nice";
-    $opt{'scanfolders'}= $data            if $label eq "scfo";
+    $txt_plst -> insert('end', "\n") if $label eq "pass";
+    $opt{'destchoice'} = $data       if $label eq "dstc";
+    $opt{'destcrfold'} = $data       if $label eq "dstf";
+    $opt{'crfold'}     = $data       if $label eq "crtf";
+    $opt{'delarch'}    = $data       if $label eq "dela";
+    $opt{'nicelevel'}  = $data       if $label eq "nice";
+    $opt{'nicelevel'}  = "0"         if $label eq "nice" && $data eq "-20";
+    $opt{'scanfolders'}= $data       if $label eq "scfo";
   }
   $s_src = $ent_src->get('0'); # set browseentry to first element
   $s_dst = $ent_dst->get('0'); # ..
