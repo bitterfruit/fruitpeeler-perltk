@@ -152,13 +152,19 @@ gdQvP+8+XKG/4pwRlw86fSh53EDZ3zZ6dH///wYFBAA7");
 # Path Frame
 
 my $frm_path = $mw -> Frame();
-my $lbl_src = $frm_path -> Label(-text=>"Source:     ");
-my $ent_src = $frm_path -> BrowseEntry(-label=>"",-variable=>\$s_src,
-                                       -browsecmd=>\&setPath_src,
-                                       -listcmd=>\&populatelistbox_source,
-                                       -width=>73, -listheight=>20);
-$ent_src -> Subwidget('arrow') -> configure(-image=>$image_arrow,
-                                            -relief=>'flat');
+my $lbl_src = $frm_path -> Label( -text => "Source:     ");
+my $ent_src = $frm_path -> BrowseEntry(
+  -label      => "",
+  -variable   => \$s_src,
+  -browsecmd  => \&setPath_src,
+  -listcmd    => \&populatelistbox_source,
+  -width      => 73,
+  -listheight => 20
+);
+$ent_src -> Subwidget('arrow') -> configure(
+  -image  => $image_arrow,
+  -relief => 'flat'
+);
 my $but_src = $frm_path -> Button(-text=>"Browse",
                                    -command =>\&browse_src,-relief=>'flat',
                                    -pady=>1, -image=>$image_browse);
@@ -174,9 +180,6 @@ my $chkb_dstcr = $frm_path -> Checkbutton(-text=>"create folders in dest based o
                                             -variable=>\$opt{'destcrfold'},
                                             -command =>\&save_configuration);
 my $lbl_dst  = $frm_path -> Label(-text=>"Destination:");
-#my $ent_dst  = $frm_path -> Entry(-textvariable=>\$s_dst,
-#                                  -state=>readonly, -width=>70);
-
 my $ent_dst = $frm_path -> BrowseEntry(-label=>"",-variable=>\$s_dst,
                                        -browsecmd=>\&setPath_dst,
                                        -listcmd=>\&populatelistbox_dest,
@@ -306,10 +309,8 @@ $mw->bind( $mw, '<Configure>' => sub {
   $mw_width    = $width unless $mw_width;
   $frm_width   = $width2 unless $frm_width; # do once this means.
   $frm_height2 = $height unless $frm_height;
-#        if ($ratio) {foreach ( $mw->geometry ) { print "$_ $ratio\n"; } }
   if ( $width == $mw_width ){ $frm_width = $width2; }
   if ( $width != $mw_width ) {
-#    print "$width2 - ", $tlst_acti->reqwidth, "\n";
 	if (isCygwin()) {
       $frm_acti->configure( -width => int( $width - $txt_plst->width -
                                          $txt_plst->cget(-borderwidth) -
@@ -323,12 +324,10 @@ $mw->bind( $mw, '<Configure>' => sub {
                                          $srl_y->width -8  -
                                          $srl_y->cget(-borderwidth)*2 ));
     }
-#    $frm_acti->update;
     $tlst_acti->configure( -width=>( int(($frm_acti->reqwidth +
                                    $frm_acti->cget(-borderwidth) -13))/7) );
     $ent_src->configure( -width=>( int(($width - $lbl_src->width -
                                         $but_src->width -55 )/7)) );
-#            $txt_plst-> configure( -width=>( int(($width-$frm_acti->width)/8))-3 );
     $mw_width = $width;
     $frm_width = $width2;
   }
@@ -381,9 +380,6 @@ $mbupdate = $mbcinfo -> command ( -label =>"Update FruitPeeler!",
   }
   my $path = "/usr/bin";
   $path = "/usr/local/bin" if -d "/usr/local/bin";
-  #if (-f "/usr/bin/fruitpeeler" && -d "/usr/local/bin" ) {
-  #  system("rm -v /usr/bin/fruitpeeler")
-  #}
   print "writing ". $path."/fruitpeeler_new"."\n";
   open(FILE,">","/tmp/fruitpeeler_new") or die $!;
   binmode(FILE);
@@ -410,7 +406,6 @@ $mbupdate = $mbcinfo -> command ( -label =>"Update FruitPeeler!",
       system( "rm -v /usr/bin/fruitpeeler" ) if -f "/usr/bin/fruitpeeler";
       system( "mv -v /tmp/fruitpeeler_new ".$path."/fruitpeeler");
     }
-    #chmod(755, $path."/fruitpeeler");
     $mw -> messageBox(-type=>"ok",
         -message=>"FruitPeeler updated. Press OK to restart FruitPeeler.");
     system("fruitpeeler&"); exit;
@@ -422,32 +417,34 @@ $mbupdate = $mbcinfo -> command ( -label =>"Update FruitPeeler!",
   }
   return;
 });
-$mbcopt->radiobutton( -label=>'nice 0',  -value=>'0',   -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
-$mbcopt->radiobutton( -label=>'nice 5',  -value=>'5',   -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
-$mbcopt->radiobutton( -label=>'nice 9',  -value=>'9',   -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
-$mbcopt->radiobutton( -label=>'nice 19', -value=>'19',  -variable =>\$opt{'nicelevel'}, -command =>\&save_configuration );
-$mbcopt->separator();
-$mbcopt -> checkbutton(-label=>"ScanFolders", -variable=>\$opt{'scanfolders'}, -command => sub { save_configuration(); refresh_filelist(); } );
+$mbcopt -> radiobutton(
+  -label    => "nice $_",
+  -value    => "$_",
+  -variable => \$opt{'nicelevel'},
+  -command  => \&save_configuration
+) for (qw( 0 5 9 19 ));
+$mbcopt -> separator();
+$mbcopt -> checkbutton(
+  -label    => "ScanFolders",
+  -variable => \$opt{'scanfolders'},
+  -command => sub { save_configuration(); refresh_filelist(); }
+);
 
 
 # Initialize
 
 $mw->eventGenerate('<Configure>');
-$txt_plst  -> configure(-yscrollcommand=>['set', $srl_y]);
-$tlst_acti -> configure(-xscrollcommand=>['set', $srla_x]);
+$txt_plst     -> configure(-yscrollcommand=>['set', $srl_y]);
+$tlst_acti    -> configure(-xscrollcommand=>['set', $srla_x]);
 $chkb_folders -> deselect();
-$chkb_dstcr -> deselect();
+$chkb_dstcr   -> deselect();
 get_depacker_paths();
 $mbcinfo -> command( -label =>$bin{'rar'}{'path'}." (".$bin{'rar'}{'version'}.")", -underline => 0);
 $mbcinfo -> command( -label =>$bin{'zip'}{'path'}." (".$bin{'zip'}{'version'}.")", -underline => 0);
-$mbcinfo -> command(-label =>"Exit", -underline => 1, -command => sub { exit } );
+$mbcinfo -> command( -label =>"Exit", -underline => 1, -command => sub { exit } );
 load_configuration();
 refresh_filelist();
-# my $medialst_mw = $mw -> Listbox( -height=>21,-width=>58,
-#                                   -selectbackground=>'yellow',
-#                                   -selectmode=>'multiple') -> pack();
-# $medialst_mw -> place();
-# print "width: ", $tlst_acti->reqwidth, " height: ", $tlst_acti->reqheight,"\n";
+
 MainLoop;
 
 
@@ -646,11 +643,6 @@ sub refresh_filelist {
   foreach my $dir ( @dirs  ) {
     my %archives;
     my $hasarchive=0;
-    #opendir(DIR, "$s_src/$dir");
-    #while (defined($file = readdir(DIR))) {
-    #  if (isFirstArchiveFile($file)) { $dirempty=0; last; }
-    #}
-    #closedir(DIR);
     my $scandepth = 1;
     $scandepth = 9 if $opt{'scanfolders'};
     list_files_recursive("$s_src/$dir", \%archives, $scandepth); # get files
@@ -859,16 +851,9 @@ sub get_depacker_paths() {
     push @rarbins, "$path/rar.exe" if (-f "$path/rar.exe");
     push @rarbins, "$path/unrar.exe" if (-f "$path/unrar.exe");
     push @rarbins, "$path/unrar"     if (-f "$path/unrar");
-    #push @rarbins, "$path/unrar-nonfree" if (-f "$path/unrar-nonfree");
-    #$bin{'rar'}{'path'} = "$path/rar" if (-f "$path/rar");
-    #$bin{'rar'}{'path'} = "$path/rar.exe" if (-f "$path/rar.exe");
-    #$bin{'rar'}{'path'} = "$path/unrar.exe" if (-f "$path/unrar.exe" and isCygwin());
-    #$bin{'rar'}{'path'} = "$path/unrar"     if (-f "$path/unrar" and !isCygwin());
     $bin{'zip'}{'path'} = "$path/7z"      if (-f "$path/7z");
     $bin{'zip'}{'path'} = "$path/7z.exe"  if (-f "$path/7z.exe");
-    #printdeb(2, "fruitpeeler::get_depacker_paths() -> $path - $bin{'rar'}{'path'} - $bin{'zip'}{'path'}\n");
   }
-  #$bin{'rar'}{'path'} = "/usr/local/bin/unrar" if (-f "/usr/local/bin/unrar"); # where rarlinux is installed
 
   while( scalar(@rarbins)> 0) {
     my $path = pop @rarbins;
@@ -911,11 +896,9 @@ sub get_bin_version {
   if (!isCygwin() || $path =~ /unrar|7z/ ) {
     my $command = "$path -V";
     $command = $path if $path =~ /7z$/;
-    #print "command: $command\n";
     open(PS, "$command 2>&1 |") || die "Failed $!\n";
     while(<PS>) {
       chomp;
-      #print $_."\n";
       return "rar $1"   if /^RAR ([\d\.]+) .*Alexander\ Roshal/;
       return "unrar $1" if /^UNRAR ([\d\.]+) .*Alexander\ Roshal/;
       return "p7zip-full $1" if /7\-Zip ([\d\.]+)/;
@@ -947,10 +930,8 @@ sub load_configuration {
     $ent_src -> insert ('0', $s_src); # insert default source path
     $ent_dst -> insert ('0', $s_dst); # insert default destination path
     save_configuration(); # i'm, crude !
-    #return;
   };
   $txt_plst -> delete('1.0','end');
-  #my ($label, $data);
   my $enc = find_encoding("utf-8");
   while(<FILE>) {
     my ($label, $data) = /(srce|dste|pass|dstc|dstf|crtf|dela|nice|scfo)\=(.*)/;
@@ -986,11 +967,9 @@ sub save_configuration {
   my $enc = find_encoding("utf-8");
   open(my $fh, '>', $configfile) or die $!;
   print $fh "fruitpeeler configuration file\n\n";
-#  foreach ( 0 .. $ent_src->index('end') ) {
   foreach ( 0 .. 9 ) {
     print ($fh "srce=",$enc->encode($ent_src->get($_)),"\n") if $ent_src->get($_) ne "";
   }
-#  foreach ( 0 .. $ent_dst->index('end') ) {
   foreach ( 0 .. 9 ) {
     print ($fh "dste=",$enc->encode($ent_dst->get($_)),"\n") if $ent_dst->get($_) ne "";
   }
@@ -1156,16 +1135,11 @@ sub win_path {
   $path =~ s/^\/cygdrive\/(\w)$/$1\:\\/;
   $path =~ s/^\/cygdrive\/(\w)\/(.*)/$1\:\\$2/;
   $path =~ s/\//\\/g;
-  #$path =~ s/\(/\\\(/g;
-  #$path =~ s/\)/\\\)/g;
-  #$path =~ s/\'/\\\'\\\'/g;
   return $path;
 }
 
 sub escape_path {
   my $string = shift;
-  #$string =~ s/\"/\\\"/g;
-  #$string =~ s/\'/\\\'/g;
   $string =~ s/\$/\\\$/g;
   $string =~ s/\\/\\\\/g;
   printdeb(2, "fruitpeeler::escape_path() -> $string\n");
