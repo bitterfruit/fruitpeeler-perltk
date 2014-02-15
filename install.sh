@@ -79,6 +79,7 @@ installonubuntu () {
     cp -v ./ZIP-File-icon_48.png /usr/share/pixmaps || { echo "Unable to copy icon image"; }
     if [ -d $HOME/Desktop ] ; then
       cp -v ./fruitpeeler.desktop $HOME/Desktop
+      cp -v ./fruitpeeler.desktop /usr/share/applications
       chmod 715 $HOME/Desktop/fruitpeeler.desktop
       chown $SUDO_USER $HOME/Desktop/fruitpeeler.desktop
     else

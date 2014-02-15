@@ -8,7 +8,8 @@ uninstallonubuntu () {
   rm -v /usr/bin/fruitpeeler
   rm -v /usr/local/bin/fruitpeeler
   rm -v "$HOME/Desktop/fruitpeeler.desktop"
-  rm -v /usr/share/pixmaps/ZIP-File-icon_48.png
+  # rm -v /usr/share/applications/fruitpeeler.desktop
+  # rm -v /usr/share/pixmaps/ZIP-File-icon_48.png
 }
 
 uninstalloncygwin () {
