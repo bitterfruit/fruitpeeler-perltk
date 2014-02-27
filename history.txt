@@ -1,5 +1,10 @@
 history.txt
 
+0.38(20140227)
+- A fix to support ' in passwords.
+- Only positive nice levels.
+- install.sh now copies ./fruitpeeler.desktop /usr/share/applications
+
 0.37(20140209)
 - New options on Menubar
   - Nice levels (cpu priority)

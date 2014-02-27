@@ -20,7 +20,7 @@ use MIME::Base64;
 
 # Global Variables
 
-$version = "0.38 ()";
+$version = "0.38 (20140227)";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
@@ -352,7 +352,7 @@ $mw->bind( $mw, '<Configure>' => sub {
 
 # Menu
 
-$menubar = $mw -> Menu(-tearoff=>1);
+$menubar = $mw -> Menu( -tearoff=>1, -relief => "flat");
 $mw -> configure(-menu => $menubar);
 $mbcinfo = $menubar -> cascade(-label=>"Info", -underline=>0,
                                   -tearoff => 0);
@@ -1150,7 +1150,7 @@ sub escape_pass {
   my $string = shift;
   $string =~ s/\\/\\\\/g; # must be first.
   $string =~ s/\"/\\\"/g;
-  $string =~ s/\'/\\\'/g;
+  #$string =~ s/\'/\\\'/g;
   $string =~ s/\$/\\\$/g;
   printdeb(2, "escape_pass() -> $string\n");
   return $string;
