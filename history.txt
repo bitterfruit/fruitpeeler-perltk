@@ -1,5 +1,8 @@
 history.txt
 
+0.39(20140408)
+- exclude annoying Thumbs.db ! Might exlude some more in the future
+
 0.38(20140227)
 - A fix to support ' in passwords.
 - Only positive nice levels.

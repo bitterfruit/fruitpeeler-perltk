@@ -20,7 +20,7 @@ use MIME::Base64;
 
 # Global Variables
 
-$version = "0.38 (20140227)";
+$version = "0.39 (20140408)";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
@@ -741,11 +741,11 @@ sub extract_selected {
     if ($isVerbosa) { print "percent_done: $percent_done\n"; } 
     $top->update();
     foreach my $pass ( @passlist ) {
-      $arg = "'".$bin{'rar'}{'path'}."'\ x -p\"".escape_pass($pass)."\" -o+ -ierr \"$archpath\" \"$destpath\"" if ($archpath =~ /(\.rar)$/i);
+      $arg = "'".$bin{'rar'}{'path'}."'\ x -x*/Thumbs.db -p\"".escape_pass($pass)."\" -o+ -ierr \"$archpath\" \"$destpath\"" if ($archpath =~ /(\.rar)$/i);
       $arg = "'".$bin{'zip'}{'path'}."' x -aoa -y -p\"$pass\" \"$archpath\" -o\"$destpath\"" if ($archpath =~ /\.(7z|7z\.001|zip)$/i);
 
       if (isCygwin() && $bin{'rar'}{'path'} !~ /unrar$|unrar\.exe$/) { # overide the above $arg if cygwin is true
-        $arg = sprintf("'".$bin{'rar'}{'path'}."' x -o+ -ierr -p\"%s\" -- \"%s\" \"%s\"",
+        $arg = sprintf("'".$bin{'rar'}{'path'}."' x -x*\\Thumbs.db -o+ -ierr -p\"%s\" -- \"%s\" \"%s\"",
                         escape_pass($pass),
                         escape_path(win_path($archpath)),
                         escape_path(win_path($destpath)))
