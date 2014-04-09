@@ -1,5 +1,9 @@
 history.txt
 
+0.40(20140410)
+- exlude annoying Thumbs.db in 7z files too.
+- support funky passwords in 7z
+
 0.39(20140408)
 - exclude annoying Thumbs.db ! Might exlude some more in the future
 
