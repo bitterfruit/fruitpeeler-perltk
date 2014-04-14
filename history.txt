@@ -1,5 +1,8 @@
 history.txt
 
+0.41(20140414)
+- fixed unicode problems
+
 0.40(20140410)
 - exlude annoying Thumbs.db in 7z files too.
 - support funky passwords in 7z

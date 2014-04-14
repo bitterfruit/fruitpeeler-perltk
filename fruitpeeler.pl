@@ -20,7 +20,7 @@ use MIME::Base64;
 
 # Global Variables
 
-$version = "0.40 (20140410)";
+$version = "0.41 (20140414)";
 $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
@@ -620,7 +620,7 @@ sub refresh_filelist {
   my $enc = find_encoding("utf-8");
   opendir(DIR, $s_src);
   while (defined($file = readdir(DIR))) {
-#   print "refr_flst: $file\n";
+    printdeb(3,"refr_flst: $file\n");
     if (-d "$s_src/".$enc->decode($file) && $enc->decode($file) !~ /^\.(.*)/ ) {
       push @dirs, $enc->decode($file)."/";
     }
@@ -640,7 +640,7 @@ sub refresh_filelist {
   else {
     $tlst_acti -> insert('end', -text=>"..", -data=>1 ) if not $s_src eq "/";
   }  
-  foreach my $dir ( @dirs  ) {
+  foreach my $dir ( @dirs ) {
     my %archives;
     my $hasarchive=0;
     my $scandepth = 1;
@@ -684,10 +684,10 @@ sub extract_selected {
         if (isFirstArchiveFile($_)) {
           #printdeb(2, "find_cb: ".$File::Find::name." - "
           # .$File::Find::dir." - ".$_."\n");
-          push @archives, { 'filename' => $_ ,
-                             'rel_dir'  => $File::Find::dir,
-                             'abs_path' => $s_src."/".$File::Find::name,
-                             'dst_path' => destfolder($_,$File::Find::dir) };
+          push @archives, { 'filename' => $enc->decode($_) ,
+                             'rel_dir'  => $enc->decode($File::Find::dir),
+                             'abs_path' => $s_src."/".$enc->decode($File::Find::name),
+                             'dst_path' => destfolder($enc->decode($_),$enc->decode($File::Find::dir)) };
         }
       }, no_chdir => 0 }, "$entry");
 
@@ -823,7 +823,7 @@ sub isFirstArchiveFile {
 }
 
 sub destfolder {
-  printdeb(3, "fruitpeeler::destfolder()\n");
+  printdeb(2, "fruitpeeler::destfolder(@_) -> ");
   my ($filename,$reldir) = @_;
   $_=$filename;
   my ($file, $ext ) = /(.*)\.(7z|7z\.001|rar|zip)$/i ;
@@ -839,6 +839,7 @@ sub destfolder {
     push @path, $reldir if $reldir ne "" && $opt{'destcrfold'} == 1;
   }
   push @path, $folder if $opt{'crfold'} == 1;
+  printdeb(2, join( "/", @path )."/\n");
   return join( "/", @path )."/";
 }
 
@@ -1173,6 +1174,7 @@ sub list_files_recursive {
   my $nkeys = keys %{$filehash};
   $maxdepth = 9 if !defined($maxdepth);
   $level = 0 if !defined($level);
+  my $enc = find_encoding("utf-8");
   if ($level>0) {
     printdeb (3, "fr..::list_files_recursive() $level $nkeys -> $path\n");
   }
@@ -1185,6 +1187,7 @@ sub list_files_recursive {
   opendir(DIR, $path) or print "Error: $!\n";
   while (defined(my $dir = readdir(DIR))) {
     next if $dir =~ /^\.$|^\.\.$/ig;
+    $dir = $enc->decode($dir);
     if ( -d $path.$dir) {
       push @dirs, $dir;
     }
