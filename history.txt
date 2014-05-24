@@ -1,5 +1,8 @@
 history.txt
 
+0.42 (20140524)
+- minor fix for files with special sign $ in them..
+
 0.41(20140414)
 - fixed unicode problems
 
