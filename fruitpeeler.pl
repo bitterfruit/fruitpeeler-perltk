@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 # fruitpeeler - rar/zip/7z passlist unrarer wrapper gui
 
+use strict;
+use warnings;
 use Tk;
 use Tk::Adjuster;
 use Tk::BrowseEntry;
@@ -20,8 +22,8 @@ use MIME::Base64;
 
 # Global Variables
 
-$version = "0.42 (20140524)";
-$VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
+my $version = "0.43 (20160110)";
+my $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
   if (not /^--verbose=\d|^-v\d+/) {
@@ -30,20 +32,19 @@ foreach (@ARGV) {
   }
 }
 print "FruitPeeler $version by BF\n\n";
-%bin=undef;
+my %bin=undef;
 $bin{'rar'}{'path'}=""; # path to rar extracter
 $bin{'zip'}{'path'}=""; # path to 7z/zip extracter.
-$configfile = "$ENV{HOME}/.fruitpeeler" ;
-$s_src = $ENV{HOME}; # default entry variable for source path
-$s_dst = $ENV{HOME}; # default entry variable for destination path
-#$s_src = "/cygdrive/" if isCygwin();
-#$s_dst = "/cygdrive/" if isCygwin();
-@cygpaths = undef;
-@winpaths = undef;
+my $configfile = "$ENV{HOME}/.fruitpeeler" ;
+my $s_src = $ENV{HOME}; # default entry variable for source path
+my $s_dst = $ENV{HOME}; # default entry variable for destination path
+my @cygpaths;
+my @winpaths;
 my $cygwin_basepath = qx/cygpath -w \// if isCygwin();
 chomp($cygwin_basepath)                 if isCygwin();
 
 # options
+my %opt;
 $opt{'destchoice'} = "Source"; # radiobutton var to Source or dest.
 $opt{'destcrfold'} = 1; #checkbox variable on frame
 $opt{'crfold'}     = 0; #checkbox variable on frame
@@ -58,7 +59,7 @@ if ( isCygwin() && ! -f "/tmp/.X0-lock" ) {
   # start XWin Server
   #system("X :0 -multiwindow&");
   print "startxwin\n";
-  system("run.exe /usr/bin/bash.exe -l -c /usr/bin/startxwin.exe&");
+  system("run.exe /usr/bin/bash.exe -l -c /usr/bin/xwin.exe -multiwindow&");
   while( -f "/tmp/.X0-lock" ) { sleep(1); }
   sleep(1);
 }
@@ -67,7 +68,7 @@ my $mw = new MainWindow(title=>"FruitPeeler $version");
 
 # Icons
 
-$image_arrow = $mw -> Photo(-format=>"gif", -data =>
+my $image_arrow = $mw -> Photo(-format=>"gif", -data =>
 "R0lGODlhIAAgAOf/AENEMjFOKzpMMTlPLUdMM0lONTFbL0pUNENXLyZiIR9mJCtnJjtiMUteMERj
 LVNfMzNsJEdmLzZrMS1wJ0BrLE9nMUVrM1plM0tqM1JpNENuLyd4Hx17ISF7GFxnNE9sL01sNR58
 IjpzKyx4LT1yNwyEFj10JUtvMTx1LUdyMkN0LT12LQSLEkl0NE9zNEl1NVB0NSqCIE13MVd0N4Fm
@@ -92,7 +93,7 @@ F7SkccUjikjCDC3IMGJGCt1F8YYqtKiiCoOP5EJNNKG0UEN5D4Dwhi7cyDdfNJi4wMN9PwzAxSjg
 1FKLJYbAEMGBQCCAQiJ5LJJHEQVMcuA/czSgwhRjlHGABVcO5MEJLWQAgDJhDjQEBgcokSZBO1zw
 5oEBAQA7");
 
-$image_browse = $mw -> Photo(-format=>"gif", -data =>
+my $image_browse = $mw -> Photo(-format=>"gif", -data =>
 "R0lGODlhIAAgAOMKAAAAALhI/zGWAMZr/wDcANSO/8DAwOKx/3P/SObm5v//////////////////
 /////yH+EUNyZWF0ZWQgd2l0aCBHSU1QACH5BAEKAA8ALAAAAAAgACAAAAT98MlJq5UAgcv7BBmx
 eeSXIaIIkuBYnSqCih5wFIGLESovy6oLoHAb5FoPgAhI+M10n0JhYLRNAQIBzPejWQBUY2AgrWpB
@@ -101,7 +102,7 @@ BqUgm3uHOUxrLC0BOaWVaDOtHXJlcUMbJ2lsFENSOFREUjlJML/AZDhjxH0uIJkcfc5u1VDKLy1v
 sMclX2BwYSvgLwc33rBF3+YYwgHpAYDat1SwuYv1t6Bw6vu3bgzT5e6cQCPpAN4SVmVKu4IYrOWA
 pbCGN24QqZXLyNFcBAA7");
 
-$image_refresh = $mw -> Photo(-format=>"gif", -data =>
+my $image_refresh = $mw -> Photo(-format=>"gif", -data =>
 "R0lGODlhIAAgAOf/AA4jXQQnZgYoZwgpYgwqagAtcgwqcA4rcQAvdBEtZwMwdRItbQcxdxcvcQoz
 cgwzeQ80ehsycxE1exI2dh0zdRM2fAg8gRc5eQ49gxA+hB08fRI/hR49fhRAhiA+fxZCgiE/gBhC
 iRhDgyRAghlDiiVBgyZChB5FjSlEhiBGjhNKkCBHiCFHjyFIiRdLkiNJiyxHiidMjihNjzFMiSBQ
@@ -126,7 +127,7 @@ QRUYgQp77KXCGkIcABHEhFpQcYIEBwhUQAdSoCILh8N8oZAAMPyARBRhgLHGFkkAkcQZjJwSC4e8
 bEJAQxHEQAWOa8hBxyGGTNLJKaYMqYswoKggUQMsKBFGGXTQocgimUypyouzSELaRA2EIEQaTyry
 SCahnKLKLqvcEUJKAFAQQhJk7IHII5NYkkgWLgAQnEADPGABCzTsQEMKHiSw6KWYYhQQADs=");
 
-$image_extract = $mw -> Photo(-format=>"gif", -data =>
+my $image_extract = $mw -> Photo(-format=>"gif", -data =>
 "R0lGODlhIAAgAOf/AP/+y//+mf/+Zf/+M/39AP/L/v/Ly//Lmf/LZf/MM/3LAP+Z/v+Zy/+Zmf+Y
 Zf+YM/2YAP9l/v9ly/9lmP9lZf9lM/1lAP8z/v8zy/8zmP8zZf8zM/0yAP0A/f0Ay/0AmP0AZf0A
 Mv0AAMv//8v/y8z/mcv/Zcz/M8v9AMvL/8zMzMvLmMzLZsvLMszLAMuZ/8uYy8uYmMyYZsuYMsyZ
@@ -159,7 +160,7 @@ my $ent_src = $frm_path -> BrowseEntry(
   -browsecmd  => \&setPath_src,
   -listcmd    => \&populatelistbox_source,
   -width      => 73,
-  -listheight => 20
+  -listheight => 20,
 );
 $ent_src -> Subwidget('arrow') -> configure(
   -image  => $image_arrow,
@@ -217,15 +218,20 @@ my $tlst_acti = $frm_acti -> TList(-itemtype=>'text',
                                    -selectmode=>'multiple',
                                    -command=>\&tlst_doubleclick);
 
+printdeb(1, "Fonts: ".join(",", $mw->fontFamilies)."\n");
 my $style_dirnoitems = $mw->ItemStyle('text', -foreground => 'dark blue',
    -selectforeground => 'dark blue', -selectbackground=>'light yellow',
-   -font=>'TkFixedFont 8'   );
+   -font=>'DejaVu 8'
+   );
+
 my $style_dirhasitems = $mw->ItemStyle('text', -foreground => 'dark blue',
    -selectforeground => 'dark blue', -selectbackground=>'light yellow',
-   -font=>'TkFixedFont 8 bold'   );
+   -font=>'DejaVu 8 bold'
+);
 my $style_file = $mw->ItemStyle('text', -foreground => 'black',
    -selectforeground => 'black', -selectbackground=>'yellow',
-   -font=>'TkFixedFont 8 bold'   );
+   -font=>'DejaVu 8 bold'
+);
 
 my $srla_x = $frm_acti -> Scrollbar(-orient=>'horizontal',
                                     -command=>[xview=>$tlst_acti]);
@@ -238,11 +244,13 @@ my $chkb_delete  = $frm_acti -> Checkbutton(-text=>"DeleteArchive",
 my $but_extract = $frm_acti -> Button(-text=>"Extract",-image=>$image_extract,
                             -relief=>'flat', -command=>\&extract_selected );
 $tlst_acti -> bind('<Control-Key-a>', \&tlst_acti_ctrl_a_pressed);
-$adj = $mw->Adjuster(-widget=>$frm_acti, -side=>'left');
+my $adj = $mw->Adjuster(-widget=>$frm_acti, -side=>'left');
 
 
 #Geometry Management
-
+$mw->geometry("800x575");
+$mw->minsize(800,575);
+$mw->maxsize(1280,2000);
 $lbl_src -> grid(-row=>1,-column=>1,-sticky=>"ew");
 $ent_src -> grid(-row=>1,-column=>2,-columnspan=>2,-sticky=>"ew");
 $but_src -> grid(-row=>1,-column=>4,-sticky=>"ew");
@@ -264,12 +272,11 @@ $lbl_plst -> grid(-row=>1,-column=>1);
 $txt_plst -> grid(-row=>2,-column=>1);
 $srl_y    -> grid(-row=>2,-column=>2,-sticky=>"ns");
 $but_plst -> grid(-row=>3,-column=>1);
+
 $frm_path -> pack(-side=>'top', -fill=>'both', -expand=>0);
 $frm_acti -> pack(-side=>'left', -fill=>'both', -expand=>1);
 $adj->packAfter($frm_acti, -side => 'left');
 $frm_plst -> pack(-side=>'left', -fill=>'both', -expand=>1);
-$mw->minsize(683,575);
-$mw->maxsize(1280,2000);
 
 
 # Bindings
@@ -277,6 +284,7 @@ $mw->maxsize(1280,2000);
 my ( $mw_width, $frm_height, $frm_width, $frm_width2, $ratio );
 $mw->bind( $mw, '<ButtonRelease-1>' => sub {
   undef $ratio;
+  printdeb(1, "\$mv callback-event <ButtonRelease-1>\n");
   $mw->update;
   my $width  = $mw->width;
   my $width2 = $frm_acti->width;
@@ -303,62 +311,63 @@ $mw->bind( $mw, '<ButtonRelease-1>' => sub {
 });
 $mw->bind( $mw, '<Configure>' => sub {
   $mw->XEvent;
+  printdeb(1, "\$mv callback-event <Configure>\n");
   my $width = $mw->width;
   my $width2 = $frm_acti->width;
   my $height = $frm_acti->height;
-  $mw_width    = $width unless $mw_width;
-  $frm_width   = $width2 unless $frm_width; # do once this means.
-  $frm_height2 = $height unless $frm_height;
-  if ( $width == $mw_width ){ $frm_width = $width2; }
-  if ( $width != $mw_width ) {
-	if (isCygwin()) {
-      $frm_acti->configure( -width => int( $width - $txt_plst->width -
-                                         $txt_plst->cget(-borderwidth) -
-                                         $txt_plst->cget(-padx) -
-                                         $srl_y->width -8  -
-                                         $srl_y->cget(-borderwidth) ));
-    } else {
-      $frm_acti->configure( -width => int( $width - $txt_plst->width -
-                                         $txt_plst->cget(-borderwidth)*2 -
-                                         $txt_plst->cget(-padx)*2 -
-                                         $srl_y->width -8  -
-                                         $srl_y->cget(-borderwidth)*2 ));
-    }
-    $tlst_acti->configure( -width=>( int(($frm_acti->reqwidth +
-                                   $frm_acti->cget(-borderwidth) -13))/7) );
-    $ent_src->configure( -width=>( int(($width - $lbl_src->width -
-                                        $but_src->width -55 )/7)) );
-    $mw_width = $width;
-    $frm_width = $width2;
-  }
-  if ($height != $frm_height) {
-	if (isCygwin()) {
-      $tlst_acti->configure( -height=>( int( ($height - $but_refresh->height - 
-                              $but_extract->height -
-                              $tlst_acti->cget(-borderwidth)-28 ))/14 ) );
-      $txt_plst->configure( -height=>( int( ($height - $lbl_plst->height - 
-                             $but_plst->height -10)/15) ));
-    } else {
-      $tlst_acti->configure( -height=>( int( ($height - $but_refresh->height - 
-                              $but_extract->height -
-                              $tlst_acti->cget(-borderwidth) -32))/16 ) );
-      $txt_plst->configure( -height=>( int( ($height - $lbl_plst->height - 
-                              $but_plst->height -10)/15) ));
-    }
-    $frm_height = $height;
-  }
+  my $mw_width    = $width unless $mw_width;
+  my $frm_width   = $width2 unless $frm_width; # do once this means.
+  my $frm_height2 = $height unless $frm_height;
+#  if ( $width == $mw_width ){ $frm_width = $width2; }
+#  if ( $width != $mw_width ) {
+#	if (isCygwin()) {
+#      $frm_acti->configure( -width => int( $width - $txt_plst->width -
+#                                         $txt_plst->cget(-borderwidth) -
+#                                         $txt_plst->cget(-padx) -
+#                                         $srl_y->width -8  -
+#                                         $srl_y->cget(-borderwidth) ));
+#    } else {
+#      $frm_acti->configure( -width => int( $width - $txt_plst->width -
+#                                         $txt_plst->cget(-borderwidth)*2 -
+#                                         $txt_plst->cget(-padx)*2 -
+#                                         $srl_y->width -8  -
+#                                         $srl_y->cget(-borderwidth)*2 ));
+#    }
+#    $tlst_acti->configure( -width=>( int(($frm_acti->reqwidth +
+#                                   $frm_acti->cget(-borderwidth) -13))/7) );
+#    $ent_src->configure( -width=>( int(($width - $lbl_src->width -
+#                                        $but_src->width -55 )/7)) );
+#    $mw_width = $width;
+#    $frm_width = $width2;
+#  }
+#  if ($height != $frm_height) {
+#	if (isCygwin()) {
+#      $tlst_acti->configure( -height=>( int( ($height - $but_refresh->height - 
+#                              $but_extract->height -
+#                              $tlst_acti->cget(-borderwidth)-28 ))/14 ) );
+#      $txt_plst->configure( -height=>( int( ($height - $lbl_plst->height - 
+#                             $but_plst->height -10)/15) ));
+#    } else {
+#      $tlst_acti->configure( -height=>( int( ($height - $but_refresh->height - 
+#                              $but_extract->height -
+#                              $tlst_acti->cget(-borderwidth) -32))/16 ) );
+#      $txt_plst->configure( -height=>( int( ($height - $lbl_plst->height - 
+#                              $but_plst->height -10)/15) ));
+#    }
+#    $frm_height = $height;
+#  }
 });
 
 
 # Menu
 
-$menubar = $mw -> Menu( -tearoff=>1, -relief => "flat");
+my $menubar = $mw -> Menu( -tearoff=>1, -relief => "flat");
 $mw -> configure(-menu => $menubar);
-$mbcinfo = $menubar -> cascade(-label=>"Info", -underline=>0,
+my $mbcinfo = $menubar -> cascade(-label=>"Info", -underline=>0,
                                   -tearoff => 0);
-$mbcopt  = $menubar -> cascade(-label=>"Options", -underline=>0, -tearoff =>0);
+my $mbcopt  = $menubar -> cascade(-label=>"Options", -underline=>0, -tearoff =>0);
 
-$mbupdate = $mbcinfo -> command ( -label =>"Update FruitPeeler!",
+my $mbupdate = $mbcinfo -> command ( -label =>"Update FruitPeeler!",
   -underline => 0, -command => sub {
   my $raw = http_get("https://raw.github.com/bitterfruit/fruitpeeler-perltk/master/VERSION");
   if ($raw eq "") {
@@ -464,7 +473,9 @@ sub browse_src {
       require Win32::GUI;
       $dir = Win32::GUI::BrowseForFolder( -root => 0x0000 , -editbox => 1,
                                            -directory => $s_src, -title => "Select a Source Directory",
-                                           -includefiles=>0, -addexstyle => WS_EX_TOPMOST,);
+                                           -includefiles=>0
+#                                           -addexstyle => WS_EX_TOPMOST,
+            );
     };
     unless($@)
     {
@@ -490,8 +501,8 @@ sub setPath_src {
   # Put path to top of list, and erase duplicate if any.
   if ($s_src ne "") {
     $ent_src -> insert( 0, $s_src );
-#   for $idx (1 .. ($ent_src->index('end')) ) {
-    for $idx (1 .. 9)  {
+#   for my $idx (1 .. ($ent_src->index('end')) ) {
+    for my $idx (1 .. 9)  {
       if ($ent_src->get($idx) eq $s_src) {
         $ent_src->delete($idx); $idx--;
         printdeb(2, "deleted setPath idx $idx\n");
@@ -519,7 +530,9 @@ sub browse_dst {
       require Win32::GUI;
       $dir = Win32::GUI::BrowseForFolder( -root => 0x0000 , -editbox => 1,
             -directory => $s_dst, -title => "Select a Destination Directory",
-            -includefiles=>0, -addexstyle => WS_EX_TOPMOST,);
+            -includefiles=>0
+#-addexstyle => WS_EX_TOPMOST
+            );
     };
     unless($@)
     {
@@ -545,8 +558,8 @@ sub setPath_dst {
   # Put path to top of list, and erase duplicate if any.
   if ($s_dst ne "") {
     $ent_dst -> insert( 0, $s_dst );
-#   for $idx (1 .. ($ent_dst->index('end')) ) {
-    for $idx (1 .. 9)  {
+#   for my $idx (1 .. ($ent_dst->index('end')) ) {
+    for my $idx (1 .. 9)  {
       if ($ent_dst->get($idx) eq $s_dst) {
         $ent_dst->delete($idx); last;
         printdeb(2, "deleted setPath idx $idx\n");
@@ -562,7 +575,7 @@ sub setPath_dst {
 sub populatelistbox_source {
 # Insert removable media items (or cygdrive on cygwin).
   printdeb(1, "fruitpeeler::populatelistbox_source()\n");
-  my @devices, $path, $device;
+  my (@devices, $path, $device);
   $path = "/media/";
   $path = "/cygdrive/" if isCygwin();
   opendir(DIR, $path);
@@ -589,7 +602,7 @@ sub populatelistbox_source {
 sub populatelistbox_dest {
 # Insert removable media items (or cygdrive on cygwin).
   printdeb(1, "fruitpeeler::populatelistbox_dest()\n");
-  my @devices, $path, $device;
+  my (@devices, $path, $device);
   if (isCygwin()) { $path = "/cygdrive/"; }
   else                        { $path = "/media/";    }
   opendir(DIR, $path);
@@ -619,7 +632,7 @@ sub refresh_filelist {
   my (@files, @dirs);
   my $enc = find_encoding("utf-8");
   opendir(DIR, $s_src);
-  while (defined($file = readdir(DIR))) {
+  while (defined(my $file = readdir(DIR))) {
     printdeb(3,"refr_flst: $file\n");
     if (-d "$s_src/".$enc->decode($file) && $enc->decode($file) !~ /^\.(.*)/ ) {
       push @dirs, $enc->decode($file)."/";
@@ -702,15 +715,15 @@ sub extract_selected {
       }
     }
   }
-  if ($isVerbosa) { 
-    print "\@archives:\n";
-    foreach (@archives) {
-      print $_->{'filename'}."-" ;
-      print $_->{'rel_dir'}."-" ;
-      print $_->{'abs_path'}."-" ;
-      print $_->{'dst_path'}."\n" ;
-    }
-  }
+  #if ($isVerbosa) { 
+  #  print "\@archives:\n";
+  #  foreach (@archives) {
+  #    print $_->{'filename'}."-" ;
+  #    print $_->{'rel_dir'}."-" ;
+  #    print $_->{'abs_path'}."-" ;
+  #    print $_->{'dst_path'}."\n" ;
+  #  }
+  #}
 
   # extract files using archives and destpath lists.
   #    print "$entry $isDir\n";
@@ -731,15 +744,17 @@ sub extract_selected {
   $top->Label(-text=>'xxxxxxxxxx', -textvariable=>\$dest,
               -justify=>'left', -width=>80) -> pack();
   my $return = 1;
-  for $idx ( 0 ... $#archives ) {
+  for my $idx ( 0 ... $#archives ) {
     $percent_done = 100*$idx/($#archives+1);
+    $top->idletasks;
     $status = sprintf('%s of %s', $idx+1, $#archives+1);
     my $archpath = $archives[$idx]->{'abs_path'};
     my $destpath = $archives[$idx]->{'dst_path'};
     $arch = "Archive: $archpath";
     $dest = "Dest.  : $destpath";
-    if ($isVerbosa) { print "percent_done: $percent_done\n"; } 
+#    if ($isVerbosa) { print "percent_done: $percent_done\n"; } 
     $top->update();
+    my $arg;
     foreach my $pass ( @passlist ) {
       $arg = "'".$bin{'rar'}{'path'}."'\ x -x*/Thumbs.db -p\"".escape_pass($pass)."\" -o+ -ierr '$archpath' '$destpath'" if ($archpath =~ /(\.rar)$/i);
       $arg = "'".$bin{'zip'}{'path'}."' x -aoa -y -xr!Thumbs.db -p'$pass' '$archpath' -o'$destpath'" if ($archpath =~ /\.(7z|7z\.001|zip)$/i);
@@ -756,7 +771,7 @@ sub extract_selected {
 
       my $return = system ( $arg );
       printdeb(2, "Return values: $return - ");
-      my $return = ($return >> 8);
+      $return = ($return >> 8);
       printdeb(2, "$return\n");
       printdeb(2, "fruitpeeler::extract_selected() -> child exited with value $return\n");
       if ( $return == 0 or $return == 9 ) { # success (return==9writeerror also success, (linefeedfilename problem))
@@ -897,12 +912,13 @@ sub get_bin_version {
   if (!isCygwin() || $path =~ /unrar|7z/ ) {
     my $command = "$path -V";
     $command = $path if $path =~ /7z$/;
+    printdeb(2, "fruitpeeler::get_bin_version($path) -> open $command 2>&1 |\n");
     open(PS, "$command 2>&1 |") || die "Failed $!\n";
     while(<PS>) {
       chomp;
       return "rar $1"   if /^RAR ([\d\.]+) .*Alexander\ Roshal/;
       return "unrar $1" if /^UNRAR ([\d\.]+) .*Alexander\ Roshal/;
-      return "p7zip-full $1" if /7\-Zip ([\d\.]+)/;
+      return "p7zip-full $1" if /7\-Zip (?:\[32\]) ([\d\.]+)/;
       return "unrar-free" if /unrar ([\d\.]+)$/;
     }
   }
@@ -955,7 +971,7 @@ sub load_configuration {
   if ($#listentries < 9) {
     for ( $#listentries .. 9 ) { $ent_src ->  insert('end', "") }
   }
-  my @listentries = $ent_dst->get('0', 'end');
+  @listentries = $ent_dst->get('0', 'end');
   if ($#listentries < 9) {
     for ( $#listentries .. 9 ) { $ent_dst ->  insert('end', "") }
   }
@@ -974,7 +990,7 @@ sub save_configuration {
   foreach ( 0 .. 9 ) {
     print ($fh "dste=",$enc->encode($ent_dst->get($_)),"\n") if $ent_dst->get($_) ne "";
   }
-  foreach $pass ( split (/\n/, encode('utf8', $txt_plst->get('1.0','end'))) ) {
+  foreach my $pass ( split (/\n/, encode('utf8', $txt_plst->get('1.0','end'))) ) {
     print $fh "pass=" . encode_base64($pass,"") . "\n";
   }
   print $fh "dstc=".$opt{'destchoice'}."\n";
@@ -1013,7 +1029,7 @@ sub tlst_doubleclick {
     $newpath = "$s_src$entry"  if ($s_src eq "/");
     $newpath = "$s_src/$entry" if !($s_src eq "/");
     if ($entry eq "..") {
-      $newpath =~ s/(.*)\/.*\/\.\.$/\1/;
+      $newpath =~ s/(.*)\/.*\/\.\.$/$1/;
       $newpath = "/" if $newpath eq "";
     }
     if (-d "$newpath") { 
@@ -1111,7 +1127,7 @@ sub translate_cygpath {
   my($cygpath) = @_;
   my($winpath);
   if(isCygwin()) {
-    if (defined(@cygpaths)) {
+    if (@cygpaths) {
       for my $idx (0...$#cygpaths) {
         return $winpaths[$idx] if $cygpaths[$idx] eq $cygpath;
       }
