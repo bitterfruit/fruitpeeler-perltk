@@ -1,5 +1,10 @@
 history.txt
 
+0:44 (20161210)
+- remove some warnings (unititalized)
+
+0.43 (20160110)
+
 0.42 (20140524)
 - minor fix for files with special sign $ in them..
 
