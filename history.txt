@@ -1,7 +1,8 @@
 history.txt
 
-0:44 (20161210)
+0.44 (20161210)
 - remove some warnings (unititalized)
+- fixed unfortunate use of unitialized variables
 
 0.43 (20160110)
 

@@ -19,10 +19,11 @@ use MIME::Base64;
 # binmode INP, ':encoding(UTF-8)';
 # binmode OUTP, ':encoding(UTF-8)';
 
+sub get_depacker_paths;
 
 # Global Variables
 
-my $version = "0.43 (20160110)";
+my $version = "0.44 (20160110)";
 my $VerboseLevel = 0;  # show verbose output, 0=none, 3=shitload
 foreach (@ARGV) {
   $VerboseLevel = $1 if /^(?:--verbose=|-v)(\d+)/ && $1<4;
@@ -32,7 +33,7 @@ foreach (@ARGV) {
   }
 }
 print "FruitPeeler $version by BF\n\n";
-my %bin=undef;
+my %bin;
 $bin{'rar'}{'path'}=""; # path to rar extracter
 $bin{'zip'}{'path'}=""; # path to 7z/zip extracter.
 my $configfile = "$ENV{HOME}/.fruitpeeler" ;
@@ -398,7 +399,7 @@ my $mbupdate = $mbcinfo -> command ( -label =>"Update FruitPeeler!",
   open(PS, "md5sum /tmp/fruitpeeler_new 2>&1 |") || die "Failed $!\n";
   my $md5local = "";
   while(<PS>) {
-    lc;
+    #lc;
     $md5local = $1 if /([a-f0-9]+)/;
   }
   close(PS);
@@ -952,6 +953,7 @@ sub load_configuration {
   my $enc = find_encoding("utf-8");
   while(<FILE>) {
     my ($label, $data) = /(srce|dste|pass|dstc|dstf|crtf|dela|nice|scfo)\=(.*)/;
+    next unless defined($label);
     $ent_src ->  insert('end', $enc->decode($data)) if $label eq "srce" && (-e $data);
     $ent_dst ->  insert('end', $enc->decode($data)) if $label eq "dste" && (-e $data);
     $data = decode_base64($data)          if $label eq "pass";
